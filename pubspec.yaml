@@ -1,3 +1,8 @@
+# pubspec.yaml
+# Amaç: Projenin bağımlılıklarını, varlıklarını ve yapılandırmalarını tanımlar.
+# Konum: Proje kök dizini (nubar/)
+# Bağlantı: Flutter, bu dosyayı paketleri ve varlıkları yönetmek için kullanır.
+
 name: nubar
 description: >-
   Kürt kültürünü korumak, yaşatmak ve dünya çapında tanıtmak amacıyla
@@ -6,13 +11,11 @@ description: >-
 # Proje sürümü (versionName+versionCode)
 version: 1.0.0+1
 
-# ──────────────────────────────────────────────────────────────────────────────
-# 1) Ortam (Dart SDK) sürüm kısıtlaması
+# Ortam (Dart SDK) sürüm kısıtlaması
 environment:
   sdk: ">=3.0.0 <4.0.0"
 
-# ──────────────────────────────────────────────────────────────────────────────
-# 2) Ana bağımlılıklar
+# Ana bağımlılıklar
 dependencies:
   flutter:
     sdk: flutter
@@ -25,55 +28,53 @@ dependencies:
   intl: ^0.19.0
 
   # Firebase çekirdek modülü ve servisler
-  firebase_core: ^2.32.0
-  firebase_auth: ^4.16.0
-  cloud_firestore: ^4.17.5
-  firebase_storage: ^11.6.5
-  firebase_analytics: ^10.4.4
-  firebase_dynamic_links: ^5.3.4
+  firebase_core: ^3.6.0  # Güncellendi
+  firebase_auth: ^5.3.1  # Güncellendi
+  cloud_firestore: ^5.4.4  # Güncellendi
+  firebase_storage: ^12.3.2  # Güncellendi
+  firebase_analytics: ^11.3.3  # Güncellendi
+  firebase_dynamic_links: ^6.0.5  # Güncellendi
 
   # Google ile giriş
   google_sign_in: ^6.3.0
 
   # Durum yönetimi (MVVM için)
-  provider: ^6.0.5
+  provider: ^6.1.2  # Güncellendi
 
   # UI ve yardımcı paketler
-  cupertino_icons: ^1.0.5
-  cached_network_image: ^3.2.3
-  flutter_svg: ^2.0.7
+  cupertino_icons: ^1.0.8  # Güncellendi
+  cached_network_image: ^3.3.1  # Güncellendi
+  flutter_svg: ^2.0.10  # Güncellendi
   shimmer: ^3.0.0
 
   # Medya işlemleri
-  image_picker: ^1.0.1
-  video_player: ^2.7.0
-  chewie: ^1.7.0
-  share_plus: ^7.1.0
-  url_launcher: ^6.1.12
+  image_picker: ^1.1.2  # Güncellendi
+  video_player: ^2.9.2  # Güncellendi
+  chewie: ^1.8.3  # Güncellendi
+  share_plus: ^10.0.3  # Güncellendi
+  url_launcher: ^6.3.1  # Güncellendi
 
   # Yerel depolama ve veri tabanı
-  shared_preferences: ^2.2.0
-  sqflite: ^2.3.0
-  path_provider: ^2.1.0
-  connectivity_plus: ^4.0.2
+  shared_preferences: ^2.3.2  # Güncellendi
+  sqflite: ^2.3.3  # Güncellendi
+  path_provider: ^2.1.4  # Güncellendi
+  connectivity_plus: ^6.0.5  # Güncellendi
 
   # Form validasyonu ve yardımcı paketler
   form_field_validator: ^1.1.0
-  timeago: ^3.5.0
-  package_info_plus: ^4.1.0
+  timeago: ^3.7.0  # Güncellendi
+  package_info_plus: ^8.0.2  # Güncellendi
 
   # Splash ekran yönetimi
-  flutter_native_splash: ^2.3.1
+  flutter_native_splash: ^2.4.1  # Güncellendi
 
-# ──────────────────────────────────────────────────────────────────────────────
-# 3) Geliştirme bağımlılıkları
+# Geliştirme bağımlılıkları
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^2.0.2
+  flutter_lints: ^4.0.0  # Güncellendi
 
-# ──────────────────────────────────────────────────────────────────────────────
-# 4) Flutter özel ayarları
+# Flutter özel ayarları
 flutter:
   uses-material-design: true
   generate: true
@@ -92,13 +93,12 @@ flutter:
         - asset: assets/fonts/NotoSans-Italic.ttf
           style: italic
 
-# ──────────────────────────────────────────────────────────────────────────────
-# 5) Flutter Intl Yapılandırması
+# Flutter Intl Yapılandırması
 flutter_intl:
   enabled: true
   main_locale: ku
   arb_dir: lib/l10n
   output_dir: lib/generated
   class_name: S
-  template_arb_file: app_en.arb  # Varsayılan template dosyasını açıkça belirtiyoruz
+  template_arb_file: app_en.arb
   output_localization_file: l10n.dart

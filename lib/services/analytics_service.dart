@@ -1,9 +1,5 @@
-import 'package:firebase_analytics/firebase_analytics.dart';
-
 // Dosya: lib/services/analytics_service.dart
-// Amaç: Analytics olaylarını kaydeder ve kullanıcı etkileşimlerini izler.
-// Bağlantılar:
-// - Çeşitli ViewModel'lar: Olayları kaydetmek için kullanılır (ör. ContentViewModel, ProfileViewModel, HomeViewModel).
+import 'package:firebase_analytics/firebase_analytics.dart';
 
 enum AnalyticsEventType {
   filterByCategory,
@@ -26,7 +22,7 @@ class AnalyticsService {
   final FirebaseAnalytics _analytics = FirebaseAnalytics.instance;
 
   // Olay kaydet
-  Future<void> logEvent(AnalyticsEventType eventType, Map<String, dynamic> parameters) async {
+  Future<void> logEvent(AnalyticsEventType eventType, Map<String, Object?> parameters) async {
     try {
       await _analytics.logEvent(
         name: eventType.toString().split('.').last,

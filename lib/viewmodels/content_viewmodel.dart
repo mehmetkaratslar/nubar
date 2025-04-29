@@ -1,10 +1,18 @@
 // lib/viewmodels/content_viewmodel.dart
+<<<<<<< HEAD
+=======
+
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
 // İçerik ViewModel sınıfı
 // İçerik işlemlerini yönetir ve UI için durumu tutar
 
 import 'package:flutter/foundation.dart';
 import 'dart:io';
 import 'dart:async';
+<<<<<<< HEAD
+=======
+import 'package:cloud_firestore/cloud_firestore.dart'; // Firestore için eklenen import
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
 
 // Models
 import '../models/content_model.dart';
@@ -76,6 +84,7 @@ class ContentViewModel extends ChangeNotifier {
     } else {
       _setLoadingMore(true);
     }
+<<<<<<< HEAD
 
     _clearError();
 
@@ -83,6 +92,15 @@ class ContentViewModel extends ChangeNotifier {
       final startAfter = refresh || _contents.isEmpty
           ? null
           : await _firestoreService.getContent(_contents.last.id);
+=======
+    _clearError();
+
+    try {
+      // Sayfalama için son içeriğin DocumentSnapshot'ını al
+      final DocumentSnapshot? startAfterDoc = refresh || _contents.isEmpty
+          ? null
+          : await _firestoreService.getContentSnapshot(_contents.last.id); // Hata düzeltildi
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
 
       // Kategorileri güncelle
       _selectedCategory = category;
@@ -91,11 +109,19 @@ class ContentViewModel extends ChangeNotifier {
       final newContents = await _firestoreService.getContents(
         category: category,
         language: language,
+<<<<<<< HEAD
         startAfter: startAfter,
       );
 
       // Daha fazla içerik var mı kontrol et
       _hasMoreContents = newContents.length >= 20;
+=======
+        startAfter: startAfterDoc, // DocumentSnapshot'ı kullan
+      );
+
+      // Daha fazla içerik var mı kontrol et
+      _hasMoreContents = newContents.length >= 20; // Varsayılan sayfa boyutu 20
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
 
       if (refresh) {
         _contents = newContents;
@@ -170,6 +196,10 @@ class ContentViewModel extends ChangeNotifier {
     try {
       // İçeriği getir
       final content = await _firestoreService.getContent(contentId);
+<<<<<<< HEAD
+=======
+
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
       if (content != null) {
         _selectedContent = content;
 
@@ -642,7 +672,11 @@ class ContentViewModel extends ChangeNotifier {
     }
   }
 
+<<<<<<< HEAD
   // İçeriği sil (editör modu)
+=======
+  // İçeriği sil (editör modu) - Aslında arşivlendi olarak işaretler
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   Future<bool> deleteContent(String contentId) async {
     _setLoading(true);
     _clearError();
@@ -655,6 +689,7 @@ class ContentViewModel extends ChangeNotifier {
         return false;
       }
 
+<<<<<<< HEAD
       // Tüm medya dosyalarını sil
       for (final url in existingContent.mediaUrls) {
         await _storageService.deleteFile(url);
@@ -667,6 +702,19 @@ class ContentViewModel extends ChangeNotifier {
 
       // İçerik durumunu arşivlendi olarak güncelle
       // Not: Gerçek silme işlemi yerine arşivleme tercih edilebilir
+=======
+      // Tüm medya dosyalarını sil (isteğe bağlı olarak: arşivleme durumunda silmeyebiliriz)
+      // for (final url in existingContent.mediaUrls) {
+      //   await _storageService.deleteFile(url);
+      // }
+
+      // Thumbnail'ı sil (varsa)
+      // if (existingContent.thumbnailUrl != null) {
+      //   await _storageService.deleteFile(existingContent.thumbnailUrl!);
+      // }
+
+      // İçerik durumunu arşivlendi olarak güncelle
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
       await _firestoreService.updateContentStatus(contentId, ContentStatus.archived);
 
       return true;

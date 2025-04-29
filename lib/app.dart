@@ -1,4 +1,8 @@
 // lib/app.dart
+<<<<<<< HEAD
+=======
+
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
 // Uygulamanın ana widget'ını ve temel yapısını tanımlar
 // Tema, rota yönetimi ve uygulama genelindeki davranışları içerir
 
@@ -24,6 +28,12 @@ import 'views/editor/content_editor_screen.dart';
 import 'utils/theme.dart';
 import 'utils/constants.dart';
 
+<<<<<<< HEAD
+=======
+// Models
+import 'models/user_model.dart'; // UserRole için eklendi
+
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
 // Çoklu dil desteği
 import 'generated/l10n.dart';
 
@@ -49,7 +59,10 @@ class _MyAppState extends State<MyApp> {
   Future<void> _loadLanguagePreference() async {
     final prefs = await SharedPreferences.getInstance();
     final savedLanguage = prefs.getString('language');
+<<<<<<< HEAD
 
+=======
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
     if (savedLanguage != null) {
       setState(() {
         _selectedLanguage = savedLanguage;
@@ -66,7 +79,10 @@ class _MyAppState extends State<MyApp> {
   Future<void> _updateLanguage(String languageCode) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('language', languageCode);
+<<<<<<< HEAD
 
+=======
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
     setState(() {
       _selectedLanguage = languageCode;
     });
@@ -91,15 +107,23 @@ class _MyAppState extends State<MyApp> {
         return MaterialApp(
           // Uygulama başlığı
           title: 'Nûbar - Kürt Kültür Platformu',
+<<<<<<< HEAD
 
           // Hata ayıklama banner'ını gizle
           debugShowCheckedModeBanner: false,
 
+=======
+          // Hata ayıklama banner'ını gizle
+          debugShowCheckedModeBanner: false,
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
           // Uygulama teması - utils/theme.dart içinde tanımlanmış
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           themeMode: ThemeMode.system, // Sistem temasını kullan
+<<<<<<< HEAD
 
+=======
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
           // Çoklu dil desteği
           locale: Locale(_selectedLanguage),
           localizationsDelegates: const [
@@ -109,7 +133,10 @@ class _MyAppState extends State<MyApp> {
             GlobalCupertinoLocalizations.delegate,
           ],
           supportedLocales: S.delegate.supportedLocales,
+<<<<<<< HEAD
 
+=======
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
           // Rota yönetimi
           initialRoute: '/',
           onGenerateRoute: (settings) {
@@ -126,25 +153,37 @@ class _MyAppState extends State<MyApp> {
                     initialLanguage: _selectedLanguage,
                   ),
                 );
+<<<<<<< HEAD
 
+=======
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
               case '/login':
               // Giriş ekranı
                 return MaterialPageRoute(
                   builder: (_) => const LoginScreen(),
                 );
+<<<<<<< HEAD
 
+=======
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
               case '/register':
               // Kayıt ekranı
                 return MaterialPageRoute(
                   builder: (_) => const RegisterScreen(),
                 );
+<<<<<<< HEAD
 
+=======
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
               case '/home':
               // Ana sayfa
                 return MaterialPageRoute(
                   builder: (_) => const HomeScreen(),
                 );
+<<<<<<< HEAD
 
+=======
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
               case '/content':
               // İçerik detay sayfası
                 return MaterialPageRoute(
@@ -152,7 +191,10 @@ class _MyAppState extends State<MyApp> {
                     contentId: args['contentId'] as String,
                   ),
                 );
+<<<<<<< HEAD
 
+=======
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
               case '/profile':
               // Profil sayfası
                 return MaterialPageRoute(
@@ -160,7 +202,10 @@ class _MyAppState extends State<MyApp> {
                     userId: args['userId'] as String? ?? authViewModel.currentUser?.uid ?? '',
                   ),
                 );
+<<<<<<< HEAD
 
+=======
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
               case '/editor/dashboard':
               // Editör paneli - Oturum doğrulama ve rol kontrolü
                 if (authViewModel.isLoggedIn &&
@@ -174,7 +219,10 @@ class _MyAppState extends State<MyApp> {
                     builder: (_) => const HomeScreen(),
                   );
                 }
+<<<<<<< HEAD
 
+=======
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
               case '/editor/content':
               // İçerik düzenleme sayfası - Oturum doğrulama ve rol kontrolü
                 if (authViewModel.isLoggedIn &&
@@ -190,7 +238,10 @@ class _MyAppState extends State<MyApp> {
                     builder: (_) => const HomeScreen(),
                   );
                 }
+<<<<<<< HEAD
 
+=======
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
               default:
               // Geçersiz rotaları ana sayfaya yönlendir
                 return MaterialPageRoute(
@@ -198,11 +249,21 @@ class _MyAppState extends State<MyApp> {
                 );
             }
           },
+<<<<<<< HEAD
 
           // Kullanıcının oturum durumuna göre başlangıç sayfasını belirle
           home: authViewModel.isLoggedIn
               ? const HomeScreen()  // Oturum açılmışsa ana sayfa
               : const SplashScreen(), // Oturum açılmamışsa splash ekranı
+=======
+          // Kullanıcının oturum durumuna göre başlangıç sayfasını belirle
+          home: authViewModel.isLoggedIn
+              ? const HomeScreen() // Oturum açılmışsa ana sayfa
+              : SplashScreen(       // Oturum açılmamışsa splash ekranı
+            onLanguageSelected: _updateLanguage,
+            initialLanguage: _selectedLanguage,
+          ),
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
         );
       },
     );

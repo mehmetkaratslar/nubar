@@ -10,15 +10,24 @@ description: >-
   Kürt kültürünü korumak, yaşatmak ve dünya çapında tanıtmak amacıyla
   geliştirilen mobil uygulama.
 
+<<<<<<< HEAD
 # Proje sürüm numarası (versionName+versionCode)
 version: 1.0.0+1
 
 # ──────────────────────────────────────────────────────────────────────────────
 # 1) Ortam (Dart SDK) sürüm kısıtlamaları
+=======
+# Proje sürümü (versionName+versionCode gibi)
+version: 1.0.0+1
+
+# ──────────────────────────────────────────────────────────────────────────────
+# 1) Ortam (Dart SDK) sürüm kısıtlaması
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
 environment:
   sdk: ">=3.0.0 <4.0.0"
 
 # ──────────────────────────────────────────────────────────────────────────────
+<<<<<<< HEAD
 # 2) Uygulama Bağımlılıkları
 dependencies:
   # Flutter çekirdeği
@@ -35,58 +44,115 @@ dependencies:
   firebase_auth: ^4.7.2
   cloud_firestore: ^4.8.4
   firebase_storage: ^11.2.5
+=======
+# 2) Ana bağımlılıklar
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Çoklu dil desteği (yerelleştirme)
+  flutter_localizations:
+    sdk: flutter
+
+  # Tarih/saat, sayılar vb. için uluslararasılaştırma
+  intl: ^0.19.0
+
+  # Firebase çekirdek modülü
+  firebase_core: ^2.32.0
+  firebase_auth: ^4.16.0
+  cloud_firestore: ^4.17.5
+  firebase_storage: ^11.6.5
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   firebase_analytics: ^10.4.4
   firebase_dynamic_links: ^5.3.4
 
   # Durum yönetimi (MVVM için)
   provider: ^6.0.5
 
+<<<<<<< HEAD
   # UI/UX yardımcı paketleri
+=======
+  # UI ve yardımcı paketler
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   cupertino_icons: ^1.0.5
   cached_network_image: ^3.2.3
   flutter_svg: ^2.0.7
   shimmer: ^3.0.0
 
+<<<<<<< HEAD
   # Medya ve paylaşım
+=======
+  # Medya işlemleri
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   image_picker: ^1.0.1
   video_player: ^2.7.0
   chewie: ^1.7.0
   share_plus: ^7.1.0
   url_launcher: ^6.1.12
 
+<<<<<<< HEAD
   # Yerel depolama ve çevrimdışı çalışma
+=======
+  # Yerel depolama ve veri tabanı
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   shared_preferences: ^2.2.0
   sqflite: ^2.3.0
   path_provider: ^2.1.0
   connectivity_plus: ^4.0.2
 
+<<<<<<< HEAD
   # Form, validasyon ve yardımcılar
+=======
+  # Form validasyonu ve yardımcı paketler
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   form_field_validator: ^1.1.0
   timeago: ^3.5.0
   package_info_plus: ^4.1.0
 
+<<<<<<< HEAD
   # Splash ekranı (asset tabanlı)
   flutter_native_splash: ^2.3.1
 
 # ──────────────────────────────────────────────────────────────────────────────
 # 3) Geliştirme-bağımlılıkları
+=======
+  # Splash ekran yönetimi
+  flutter_native_splash: ^2.3.1
+
+  # Google ile giriş
+  google_sign_in: ^6.3.0
+
+# ──────────────────────────────────────────────────────────────────────────────
+# 3) Geliştirme bağımlılıkları
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^2.0.2
 
 # ──────────────────────────────────────────────────────────────────────────────
+<<<<<<< HEAD
 # 4) Flutter özel ayarlar
 flutter:
   uses-material-design: true
 
   # Statik varlıklar (images, icons, animations…)
+=======
+# 4) Flutter özel ayarları
+flutter:
+  uses-material-design: true
+  generate: true  # ✅ Buraya dikkat, ekledik!
+
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   assets:
     - assets/images/
     - assets/icons/
     - assets/animations/
 
+<<<<<<< HEAD
   # Özel fontlar
+=======
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   fonts:
     - family: NotoSans
       fonts:
@@ -97,9 +163,18 @@ flutter:
           style: italic
 
 # ──────────────────────────────────────────────────────────────────────────────
+<<<<<<< HEAD
 # 5) Flutter Intl (ARB) yapılandırması
 flutter_intl:
   enabled: true
   main_locale: ku
   arb_dir: lib/l10n
   output_dir: lib/generated
+=======
+## 5) Flutter Intl Yapılandırması
+#flutter_intl:
+#  enabled: true
+#  main_locale: ku
+#  arb_dir: lib/l10n
+#  output_dir: lib/generated
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)

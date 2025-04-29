@@ -1,10 +1,16 @@
 {
   "@@locale": "en",
+<<<<<<< HEAD
 
   "appName": "Nûbar",
   "appDescription": "Kurdish Cultural Platform",
 
   // General
+=======
+  "appName": "Nûbar",
+  "appDescription": "Kurdish Cultural Platform",
+
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "ok": "OK",
   "cancel": "Cancel",
   "save": "Save",
@@ -30,7 +36,10 @@
   "optional": "Optional",
   "all": "All",
 
+<<<<<<< HEAD
   // Authentication
+=======
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "login": "Log In",
   "signup": "Sign Up",
   "logout": "Log Out",
@@ -43,6 +52,10 @@
   "createAccount": "Create Account",
   "alreadyHaveAccount": "Already have an account? Log in",
   "dontHaveAccount": "Don't have an account? Sign up",
+<<<<<<< HEAD
+=======
+
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "loginWith": "Log in with {provider}",
   "@loginWith": {
     "placeholders": {
@@ -56,7 +69,10 @@
     }
   },
 
+<<<<<<< HEAD
   // Profile
+=======
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "profile": "Profile",
   "editProfile": "Edit Profile",
   "bio": "Biography",
@@ -66,6 +82,10 @@
   "savedContents": "Saved Contents",
   "likedContents": "Liked Contents",
   "myComments": "My Comments",
+<<<<<<< HEAD
+=======
+
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "joinedOn": "Joined on {date}",
   "@joinedOn": {
     "placeholders": {
@@ -73,7 +93,10 @@
     }
   },
 
+<<<<<<< HEAD
   // Content
+=======
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "categories": "Categories",
   "history": "History",
   "language": "Language",
@@ -89,31 +112,50 @@
   "views": "Views",
   "addComment": "Add Comment",
   "writeComment": "Write a comment...",
+<<<<<<< HEAD
+=======
+
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "publishedOn": "Published on {date}",
   "@publishedOn": {
     "placeholders": {
       "date": {}
     }
   },
+<<<<<<< HEAD
+=======
+
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "createdBy": "Created by {username}",
   "@createdBy": {
     "placeholders": {
       "username": {}
     }
   },
+<<<<<<< HEAD
+=======
+
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "lastEdited": "Last edited on {date}",
   "@lastEdited": {
     "placeholders": {
       "date": {}
     }
   },
+<<<<<<< HEAD
+=======
+
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "historyDescription": "Kurdish history information, events, and important figures.",
   "languageDescription": "Kurdish grammar, words, expressions and dialects.",
   "artDescription": "Kurdish art, literature, poetry and painting.",
   "musicDescription": "Kurdish music, songs, instruments and artists.",
   "traditionsDescription": "Kurdish cultural traditions, celebrations and lifestyle.",
 
+<<<<<<< HEAD
   // Editor
+=======
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "editor": "Editor",
   "editorDashboard": "Editor Dashboard",
   "createContent": "Create Content",
@@ -140,7 +182,10 @@
   "reportedContents": "Reported Contents",
   "reportedComments": "Reported Comments",
 
+<<<<<<< HEAD
   // Reports
+=======
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "report": "Report",
   "reportContent": "Report Content",
   "reportComment": "Report Comment",
@@ -154,7 +199,10 @@
   "other": "Other",
   "thanksForReporting": "Thank you for reporting. We will review this soon.",
 
+<<<<<<< HEAD
   // Settings
+=======
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "settings": "Settings",
   "general": "General",
   "account": "Account",
@@ -166,17 +214,28 @@
   "privacyPolicy": "Privacy Policy",
   "contactUs": "Contact Us",
   "feedback": "Feedback",
+<<<<<<< HEAD
   "language": "Language",
+=======
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "theme": "Theme",
   "darkMode": "Dark Mode",
   "lightMode": "Light Mode",
   "systemDefault": "System Default",
 
+<<<<<<< HEAD
   // Languages
   "kurdishKurmanji": "Kurdî (Kurmancî)",
   "turkish": "Türkçe",
   "english": "English",
   "selectLanguage": "Select Language",
+=======
+  "kurdishKurmanji": "Kurdî (Kurmancî)",
+  "turkish": "Turkish",
+  "english": "English",
+  "selectLanguage": "Select Language",
+
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "languageChanged": "Language changed to {language}",
   "@languageChanged": {
     "placeholders": {
@@ -184,7 +243,10 @@
     }
   },
 
+<<<<<<< HEAD
   // Error Messages
+=======
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "networkError": "Please check your internet connection and try again.",
   "generalError": "An error occurred. Please try again later.",
   "authError": "There was an error logging in. Please try again.",
@@ -198,15 +260,25 @@
   "commentError": "An error occurred while sending your comment.",
   "permissionDenied": "You don't have permission to perform this action.",
 
+<<<<<<< HEAD
   // Splash Screen
+=======
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "welcomeToNubar": "Welcome to Nûbar",
   "discoverKurdishCulture": "Discover Kurdish Culture",
   "getStarted": "Get Started",
 
+<<<<<<< HEAD
   // Help and Support
+=======
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "frequentlyAskedQuestions": "Frequently Asked Questions",
   "howToUse": "How to Use",
   "contactSupport": "Contact Support",
   "reportIssue": "Report an Issue",
   "giveFeedback": "Give Feedback"
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)

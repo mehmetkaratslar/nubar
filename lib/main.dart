@@ -1,4 +1,8 @@
 // lib/main.dart
+<<<<<<< HEAD
+=======
+
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
 // Uygulamanın başlangıç noktası ve genel yapılandırması
 // Bu dosya, Firebase'i başlatır, provider'ları ayarlar ve MyApp widget'ını çalıştırır
 

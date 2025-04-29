@@ -4,7 +4,11 @@
   "appName": "Nûbar",
   "appDescription": "Platforma Çanda Kurdî",
 
+<<<<<<< HEAD
   // General
+=======
+
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "ok": "Baş e",
   "cancel": "Betal",
   "save": "Tomar bike",
@@ -30,7 +34,11 @@
   "optional": "Ne pêwîst",
   "all": "Hemû",
 
+<<<<<<< HEAD
   // Authentication
+=======
+
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "login": "Têkeve",
   "signup": "Tomar bibe",
   "logout": "Derkeve",
@@ -56,7 +64,11 @@
     }
   },
 
+<<<<<<< HEAD
   // Profile
+=======
+
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "profile": "Profîl",
   "editProfile": "Profîl biguherîne",
   "bio": "Derbarê min de",
@@ -73,7 +85,11 @@
     }
   },
 
+<<<<<<< HEAD
   // Content
+=======
+
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "categories": "Kategorî",
   "history": "Dîrok",
   "language": "Ziman",
@@ -113,7 +129,11 @@
   "musicDescription": "Muzîka Kurdî, stran, amûr û hunermend.",
   "traditionsDescription": "Kevneşopiyên çanda Kurdî, pîrozbahî û awayê jiyanê.",
 
+<<<<<<< HEAD
   // Editor
+=======
+
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "editor": "Editor",
   "editorDashboard": "Panela Edîtorê",
   "createContent": "Naverok biafirîne",
@@ -140,7 +160,11 @@
   "reportedContents": "Naverokên Rapor Kirî",
   "reportedComments": "Şîroveyên Rapor Kirî",
 
+<<<<<<< HEAD
   // Reports
+=======
+
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "report": "Rapor bike",
   "reportContent": "Naverokê rapor bike",
   "reportComment": "Şîroveyê rapor bike",
@@ -154,7 +178,11 @@
   "other": "Din",
   "thanksForReporting": "Ji bo raporkirinê spas. Em ê di demeke nêz de lê binêrin.",
 
+<<<<<<< HEAD
   // Settings
+=======
+
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "settings": "Mîheng",
   "general": "Giştî",
   "account": "Hesab",
@@ -172,7 +200,11 @@
   "lightMode": "Moda Ronî",
   "systemDefault": "Mîhenga Pergalê",
 
+<<<<<<< HEAD
   // Languages
+=======
+
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "kurdishKurmanji": "Kurdî (Kurmancî)",
   "turkish": "Tirkî",
   "english": "Îngilîzî",
@@ -184,7 +216,11 @@
     }
   },
 
+<<<<<<< HEAD
   // Error Messages
+=======
+
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "networkError": "Ji kerema xwe girêdana înternetê kontrol bike û dîsa biceribîne.",
   "generalError": "Çewtiyek çêbû. Ji kerema xwe paşê dîsa biceribîne.",
   "authError": "Di têketinê de çewtiyek çêbû. Ji kerema xwe dîsa biceribîne.",
@@ -198,12 +234,20 @@
   "commentError": "Di şandina şîroveyê de çewtiyek çêbû.",
   "permissionDenied": "Destûra te nîne ku vê çalakiyê bike.",
 
+<<<<<<< HEAD
   // Splash Screen
+=======
+
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "welcomeToNubar": "Bi xêr hatî Nûbar",
   "discoverKurdishCulture": "Çanda Kurdî Keşf Bike",
   "getStarted": "Dest pê bike",
 
+<<<<<<< HEAD
   // Help and Support
+=======
+
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "frequentlyAskedQuestions": "Pirsên Pir Tên Pirsîn",
   "howToUse": "Çawa tê bikaranîn",
   "contactSupport": "Bi Tîma Piştgiriyê re Têkilî Deyne",

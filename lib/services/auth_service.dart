@@ -106,8 +106,17 @@ class AuthService {
   // Kullanıcı profilini güncelle
   Future<void> updateProfile({String? displayName, String? photoURL}) async {
     try {
+<<<<<<< HEAD
       await _auth.currentUser?.updateDisplayName(displayName);
       await _auth.currentUser?.updatePhotoURL(photoURL);
+=======
+      if (displayName != null) {
+        await _auth.currentUser?.updateDisplayName(displayName);
+      }
+      if (photoURL != null) {
+        await _auth.currentUser?.updatePhotoURL(photoURL);
+      }
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
     }

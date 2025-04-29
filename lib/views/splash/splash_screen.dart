@@ -15,7 +15,12 @@ import '../../utils/constants.dart';
 import '../../utils/theme.dart';
 
 // Çoklu dil desteği
+<<<<<<< HEAD
 import '../../l10n/l10n.dart';
+=======
+import '../../generated/l10n.dart';
+
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
 
 class SplashScreen extends StatefulWidget {
   // Dil seçimi için callback

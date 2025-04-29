@@ -4,7 +4,11 @@
   "appName": "Nûbar",
   "appDescription": "Kürt Kültür Platformu",
 
+<<<<<<< HEAD
   // General
+=======
+
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "ok": "Tamam",
   "cancel": "İptal",
   "save": "Kaydet",
@@ -30,7 +34,11 @@
   "optional": "İsteğe Bağlı",
   "all": "Tümü",
 
+<<<<<<< HEAD
   // Authentication
+=======
+
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "login": "Giriş Yap",
   "signup": "Kayıt Ol",
   "logout": "Çıkış Yap",
@@ -56,7 +64,11 @@
     }
   },
 
+<<<<<<< HEAD
   // Profile
+=======
+
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "profile": "Profil",
   "editProfile": "Profili Düzenle",
   "bio": "Hakkımda",
@@ -73,7 +85,11 @@
     }
   },
 
+<<<<<<< HEAD
   // Content
+=======
+
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "categories": "Kategoriler",
   "history": "Tarih",
   "language": "Dil",
@@ -113,7 +129,11 @@
   "musicDescription": "Kürt müziği, şarkıları, enstrümanları ve sanatçıları.",
   "traditionsDescription": "Kürt kültürel gelenekleri, kutlamaları ve yaşam tarzı.",
 
+<<<<<<< HEAD
   // Editor
+=======
+
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "editor": "Editör",
   "editorDashboard": "Editör Paneli",
   "createContent": "İçerik Oluştur",
@@ -140,7 +160,11 @@
   "reportedContents": "Bildirilen İçerikler",
   "reportedComments": "Bildirilen Yorumlar",
 
+<<<<<<< HEAD
   // Reports
+=======
+
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "report": "Bildir",
   "reportContent": "İçeriği Bildir",
   "reportComment": "Yorumu Bildir",
@@ -154,7 +178,11 @@
   "other": "Diğer",
   "thanksForReporting": "Bildirdiğiniz için teşekkürler. En kısa sürede inceleyeceğiz.",
 
+<<<<<<< HEAD
   // Settings
+=======
+
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "settings": "Ayarlar",
   "general": "Genel",
   "account": "Hesap",
@@ -172,7 +200,11 @@
   "lightMode": "Aydınlık Mod",
   "systemDefault": "Sistem Varsayılanı",
 
+<<<<<<< HEAD
   // Languages
+=======
+
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "kurdishKurmanji": "Kurdî (Kurmancî)",
   "turkish": "Türkçe",
   "english": "English",
@@ -184,7 +216,11 @@
     }
   },
 
+<<<<<<< HEAD
   // Error Messages
+=======
+
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "networkError": "İnternet bağlantınızı kontrol edin ve tekrar deneyin.",
   "generalError": "Bir hata oluştu. Lütfen daha sonra tekrar deneyin.",
   "authError": "Giriş yapılırken bir hata oluştu. Lütfen tekrar deneyin.",
@@ -198,12 +234,20 @@
   "commentError": "Yorum gönderilirken bir hata oluştu.",
   "permissionDenied": "Bu işlemi yapmak için yetkiniz yok.",
 
+<<<<<<< HEAD
   // Splash Screen
+=======
+
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "welcomeToNubar": "Nûbar'a Hoş Geldiniz",
   "discoverKurdishCulture": "Kürt Kültürünü Keşfedin",
   "getStarted": "Başlayın",
 
+<<<<<<< HEAD
   // Help and Support
+=======
+
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   "frequentlyAskedQuestions": "Sıkça Sorulan Sorular",
   "howToUse": "Nasıl Kullanılır",
   "contactSupport": "Destek Ekibiyle İletişime Geçin",

@@ -48,7 +48,11 @@ class FirestoreService {
   // Kullanıcıyı güncelle
   Future<void> updateUser(UserModel user) async {
     try {
+<<<<<<< HEAD
       await _usersCollection.doc(user.uid).update(user.toMap());
+=======
+      await _usersCollection.doc(user.id).update(user.toMap()); // Assuming UserModel has an 'id' or using uid consistently
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
     } catch (e) {
       throw Exception('Kullanıcı güncellenirken bir hata oluştu: $e');
     }
@@ -174,6 +178,20 @@ class FirestoreService {
     }
   }
 
+<<<<<<< HEAD
+=======
+  // İçeriği DocumentSnapshot olarak getir (Pagination için gerekli)
+  Future<DocumentSnapshot?> getContentSnapshot(String contentId) async {
+    try {
+      return await _contentsCollection.doc(contentId).get();
+    } catch (e) {
+      print('Error getting content snapshot: $e'); // Hata mesajını konsola yazdır
+      return null;
+    }
+  }
+
+
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   // İçeriği güncelle
   Future<void> updateContent(ContentModel content) async {
     try {

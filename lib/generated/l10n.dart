@@ -10,7 +10,11 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart';
 
+<<<<<<< HEAD
 import 'l10n/messages_all.dart';
+=======
+import '../l10n/messages_all.dart';
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
 
 /// Uygulama için çoklu dil desteği sağlayan sınıf
 class S {
@@ -135,6 +139,10 @@ class S {
   String get views => Intl.message('Views', name: 'views');
   String get addComment => Intl.message('Add Comment', name: 'addComment');
   String get writeComment => Intl.message('Write a comment...', name: 'writeComment');
+<<<<<<< HEAD
+=======
+  String get contentNotFound => Intl.message('Content not found', name: 'contentNotFound');
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
 
   String publishedOn(String date) {
     return Intl.message(
@@ -176,7 +184,10 @@ class S {
   String get contentSummary => Intl.message('Content Summary', name: 'contentSummary');
   String get contentText => Intl.message('Content Text', name: 'contentText');
   String get contentCategory => Intl.message('Content Category', name: 'contentCategory');
+<<<<<<< HEAD
   String get contentType => Intl.message('Content Type', name: 'contentType');
+=======
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   String get contentTags => Intl.message('Content Tags', name: 'contentTags');
   String get addTags => Intl.message('Add Tags', name: 'addTags');
   String get uploadMedia => Intl.message('Upload Media', name: 'uploadMedia');
@@ -187,6 +198,7 @@ class S {
   String get draft => Intl.message('Draft', name: 'draft');
   String get published => Intl.message('Published', name: 'published');
   String get archived => Intl.message('Archived', name: 'archived');
+<<<<<<< HEAD
   String get pending => Intl.message('Pending', name: 'pending');
   String get publishedContents => Intl.message('Published Contents', name: 'publishedContents');
   String get draftContents => Intl.message('Draft Contents', name: 'draftContents');
@@ -195,6 +207,10 @@ class S {
   String get reportedComments => Intl.message('Reported Comments', name: 'reportedComments');
 
   // Reports
+=======
+
+  // Report
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   String get report => Intl.message('Report', name: 'report');
   String get reportContent => Intl.message('Report Content', name: 'reportContent');
   String get reportComment => Intl.message('Report Comment', name: 'reportComment');
@@ -208,6 +224,7 @@ class S {
   String get other => Intl.message('Other', name: 'other');
   String get thanksForReporting => Intl.message('Thank you for reporting. We will review this soon.', name: 'thanksForReporting');
 
+<<<<<<< HEAD
   // Settings
   String get settings => Intl.message('Settings', name: 'settings');
   String get general => Intl.message('General', name: 'general');
@@ -228,6 +245,11 @@ class S {
   // Languages
   String get kurdishKurmanji => Intl.message('Kurdî (Kurmancî)', name: 'kurdishKurmanji');
   String get turkish => Intl.message('Türkçe', name: 'turkish');
+=======
+  // Languages
+  String get kurdishKurmanji => Intl.message('Kurdish (Kurmanji)', name: 'kurdishKurmanji');
+  String get turkish => Intl.message('Turkish', name: 'turkish');
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   String get english => Intl.message('English', name: 'english');
   String get selectLanguage => Intl.message('Select Language', name: 'selectLanguage');
 
@@ -239,6 +261,7 @@ class S {
     );
   }
 
+<<<<<<< HEAD
   // Error Messages
   String get networkError => Intl.message('Please check your internet connection and try again.', name: 'networkError');
   String get generalError => Intl.message('An error occurred. Please try again later.', name: 'generalError');
@@ -253,10 +276,13 @@ class S {
   String get commentError => Intl.message('An error occurred while sending your comment.', name: 'commentError');
   String get permissionDenied => Intl.message('You don\'t have permission to perform this action.', name: 'permissionDenied');
 
+=======
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   // Splash Screen
   String get welcomeToNubar => Intl.message('Welcome to Nûbar', name: 'welcomeToNubar');
   String get discoverKurdishCulture => Intl.message('Discover Kurdish Culture', name: 'discoverKurdishCulture');
   String get getStarted => Intl.message('Get Started', name: 'getStarted');
+<<<<<<< HEAD
 
   // Help and Support
   String get frequentlyAskedQuestions => Intl.message('Frequently Asked Questions', name: 'frequentlyAskedQuestions');
@@ -264,6 +290,8 @@ class S {
   String get contactSupport => Intl.message('Contact Support', name: 'contactSupport');
   String get reportIssue => Intl.message('Report an Issue', name: 'reportIssue');
   String get giveFeedback => Intl.message('Give Feedback', name: 'giveFeedback');
+=======
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
 }
 
 /// Uygulama için lokalizasyon delegasyonu
@@ -293,6 +321,7 @@ class AppLocalizationDelegate extends LocalizationsDelegate<S> {
     }
     return false;
   }
+<<<<<<< HEAD
 }
 
 // Bu dosya gerçek l10n işlemleri için bir simülasyondur.
@@ -302,4 +331,6 @@ class AppLocalizationDelegate extends LocalizationsDelegate<S> {
 // Simülasyon amacıyla oluşturulan fonksiyon
 Future<bool> initializeMessages(String localeName) async {
   return Future.value(true);
+=======
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
 }

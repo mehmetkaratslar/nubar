@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // lib/views/content/content_detail_screen.dart
 // İçerik detay sayfası
 // Seçilen içeriğin tüm detaylarını, medya içeriklerini ve yorumları gösterir
@@ -21,11 +22,38 @@ import '../../models/report_model.dart';
 
 // Utils
 import '../../utils/constants.dart';
+=======
+// lib/views/editor/content_editor_screen.dart
+
+// İçerik düzenleme ekranı
+// Editörün içerik oluşturması ve düzenlemesi için arayüz sağlar
+
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+
+// ViewModels
+import '../../viewmodels/auth_viewmodel.dart';
+import '../../viewmodels/editor_viewmodel.dart';
+
+// Models
+import '../../models/content_model.dart';
+
+// Services
+import '../../services/firestore_service.dart'; // FirestoreService import edildi [cite: 9]
+
+// Utils
+import '../../utils/constants.dart';
+import '../../utils/validators.dart';
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
 import '../../utils/extensions.dart';
 
 // Çoklu dil desteği
 import '../../generated/l10n.dart';
 
+<<<<<<< HEAD
 class ContentDetailScreen extends StatefulWidget {
   final String contentId;
 
@@ -50,19 +78,76 @@ class _ContentDetailScreenState extends State<ContentDetailScreen> {
 
   // Scrollable için controller (yorumlara kaydırma için)
   final ScrollController _scrollController = ScrollController();
+=======
+class ContentEditorScreen extends StatefulWidget {
+  // İçerik ID'si (düzenleme için), yeni içerik için null
+  final String? contentId;
+
+  const ContentEditorScreen({
+    Key? key,
+    this.contentId,
+  }) : super(key: key);
+
+  @override
+  State<ContentEditorScreen> createState() => _ContentEditorScreenState();
+}
+
+class _ContentEditorScreenState extends State<ContentEditorScreen> {
+  // Form anahtarı - Form doğrulama için
+  final _formKey = GlobalKey<FormState>();
+
+  // Aktif dil kodu
+  String _activeLanguage = 'ku'; // Varsayılan olarak Kürtçe
+
+  // Başlık controller'ları (dillere göre)
+  final Map<String, TextEditingController> _titleControllers = {};
+
+  // İçerik metni controller'ları (dillere göre)
+  final Map<String, TextEditingController> _contentControllers = {};
+
+  // Özet controller'ları (dillere göre)
+  final Map<String, TextEditingController> _summaryControllers = {};
+
+  // Etiket controller'ı
+  final TextEditingController _tagController = TextEditingController();
+
+  // Resim seçici
+  final ImagePicker _imagePicker = ImagePicker();
+
+  // İçerik düzenleme modu mu
+  bool get _isEditMode => widget.contentId != null;
+
+  // Mevcut içerik (düzenleme modunda)
+  ContentModel? _existingContent;
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
 
   @override
   void initState() {
     super.initState();
 
+<<<<<<< HEAD
     // İçerik detaylarını yükle
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadContent();
     });
+=======
+    // Dil controller'larını oluştur
+    for (final language in SupportedLanguages.languages.keys) {
+      _titleControllers[language] = TextEditingController();
+      _contentControllers[language] = TextEditingController();
+      _summaryControllers[language] = TextEditingController();
+    }
+
+    // Mevcut içeriği yükle (düzenleme modunda)
+    if (_isEditMode) {
+      _loadExistingContent();
+    }
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
   }
 
   @override
   void dispose() {
+<<<<<<< HEAD
     _commentController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -279,10 +364,62 @@ class _ContentDetailScreenState extends State<ContentDetailScreen> {
         setState(() {
           _isSendingComment = false;
         });
+=======
+    // Controller'ları temizle
+    for (final controller in _titleControllers.values) {
+      controller.dispose();
+    }
+    for (final controller in _contentControllers.values) {
+      controller.dispose();
+    }
+    for (final controller in _summaryControllers.values) {
+      controller.dispose();
+    }
+    _tagController.dispose();
+    super.dispose();
+  }
+
+  // Mevcut içeriği yükleme (düzenleme modu)
+  Future<void> _loadExistingContent() async {
+    try {
+      // Context'e erişilemiyorsa erken çık
+      if (!mounted) return;
+
+      // Firestore servisini al
+      final editorViewModel = Provider.of<EditorViewModel>(context, listen: false);
+
+      // İçeriği Firestore'dan yükle
+      final firestoreService = Provider.of<FirestoreService>(context, listen: false); // Hata düzeltildi [cite: 9]
+      final content = await firestoreService.getContent(widget.contentId!);
+
+      if (content != null) {
+        // İçeriği depola
+        setState(() {
+          _existingContent = content;
+        });
+
+        // Form verilerini doldur
+        editorViewModel.prepareContentForm(content);
+
+        // Controller'lara değerleri aktar
+        for (final language in content.title.keys) {
+          _titleControllers[language]?.text = content.title[language] ?? '';
+          _contentControllers[language]?.text = content.content[language] ?? '';
+          _summaryControllers[language]?.text = content.summary[language] ?? '';
+        }
+      }
+    } catch (e) {
+      // Hata mesajı göster
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('İçerik yüklenirken hata oluştu: $e')),
+        );
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
       }
     }
   }
 
+<<<<<<< HEAD
   // Yorumlara kaydır
   void _scrollToComments() {
     if (_scrollController.hasClients) {
@@ -292,10 +429,103 @@ class _ContentDetailScreenState extends State<ContentDetailScreen> {
         offset,
         duration: const Duration(milliseconds: 500),
         curve: Curves.easeInOut,
+=======
+  // İçeriği kaydetme veya güncelleme
+  Future<void> _saveContent() async {
+    // Form doğrulama
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    // Zorunlu dil kontrolü
+    if (_titleControllers['ku']!.text.isEmpty ||
+        _contentControllers['ku']!.text.isEmpty ||
+        _summaryControllers['ku']!.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Kürtçe (Kurmancî) içerik zorunludur')),
+      );
+      return;
+    }
+
+    try {
+      // ViewModels
+      final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+      final editorViewModel = Provider.of<EditorViewModel>(context, listen: false);
+
+      // Controller değerlerinden içerik verilerini oluştur
+      final Map<String, String> title = {};
+      final Map<String, String> content = {};
+      final Map<String, String> summary = {};
+
+      for (final language in _titleControllers.keys) {
+        final titleText = _titleControllers[language]!.text.trim();
+        final contentText = _contentControllers[language]!.text.trim();
+        final summaryText = _summaryControllers[language]!.text.trim();
+
+        // Boş olmayan içerikleri ekle
+        if (titleText.isNotEmpty && contentText.isNotEmpty && summaryText.isNotEmpty) {
+          title[language] = titleText;
+          content[language] = contentText;
+          summary[language] = summaryText;
+        }
+      }
+
+      // Düzenleme veya oluşturma
+      if (_isEditMode) {
+        final success = await editorViewModel.updateContent(
+          contentId: widget.contentId!,
+          title: title,
+          content: content,
+          summary: summary,
+          category: editorViewModel.contentCategory,
+          contentType: editorViewModel.contentType,
+          lastEditedBy: authViewModel.userId,
+          newMediaFiles: editorViewModel.selectedMediaFiles,
+          mediaUrlsToKeep: editorViewModel.mediaUrlsToKeep,
+          newThumbnailFile: editorViewModel.selectedThumbnail,
+          tags: editorViewModel.contentTags,
+        );
+
+        if (!mounted) return;
+
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('İçerik başarıyla güncellendi')),
+          );
+          Navigator.pop(context);
+        }
+      } else {
+        final contentId = await editorViewModel.createContent(
+          title: title,
+          content: content,
+          summary: summary,
+          category: editorViewModel.contentCategory,
+          contentType: editorViewModel.contentType,
+          createdBy: authViewModel.userId,
+          mediaFiles: editorViewModel.selectedMediaFiles,
+          thumbnailFile: editorViewModel.selectedThumbnail,
+          tags: editorViewModel.contentTags,
+        );
+
+        if (!mounted) return;
+
+        if (contentId != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('İçerik başarıyla oluşturuldu')),
+          );
+          Navigator.pop(context);
+        }
+      }
+    } catch (e) {
+      // Hata mesajı göster
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('İçerik kaydedilirken hata oluştu: $e')),
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
       );
     }
   }
 
+<<<<<<< HEAD
   // Şikayet nedeni seçme dialogu
   Future<ReportType?> _showReportReasonDialog() async {
     return showDialog<ReportType>(
@@ -783,11 +1013,329 @@ class _ContentDetailScreenState extends State<ContentDetailScreen> {
                         // Yorumlar listesi
                         _buildCommentsList(contentViewModel),
                       ],
+=======
+  // İçeriği yayınlama
+  Future<void> _publishContent() async {
+    try {
+      if (!_isEditMode) return;
+      final editorViewModel = Provider.of<EditorViewModel>(context, listen: false);
+      final success = await editorViewModel.publishContent(widget.contentId!);
+
+      if (!mounted) return;
+
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('İçerik başarıyla yayınlandı')),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      // Hata mesajı göster
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('İçerik yayınlanırken hata oluştu: $e')),
+      );
+    }
+  }
+
+  // İçeriği taslak olarak işaretleme
+  Future<void> _unpublishContent() async {
+    try {
+      if (!_isEditMode) return;
+      final editorViewModel = Provider.of<EditorViewModel>(context, listen: false);
+      final success = await editorViewModel.unpublishContent(widget.contentId!);
+
+      if (!mounted) return;
+
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('İçerik taslak olarak işaretlendi')),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      // Hata mesajı göster
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('İçerik durumu değiştirilirken hata oluştu: $e')),
+      );
+    }
+  }
+
+  // İçeriği arşivleme (silme)
+  Future<void> _archiveContent() async {
+    try {
+      if (!_isEditMode) return;
+
+      // Onay dialogu göster
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('İçeriği Arşivle'),
+          content: const Text('Bu içeriği arşivlemek istediğinizden emin misiniz? Arşivlenen içerikler kullanıcılar tarafından görüntülenemez.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('İptal'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Arşivle'),
+            ),
+          ],
+        ),
+      ) ?? false;
+
+      if (!confirmed) return;
+
+      final editorViewModel = Provider.of<EditorViewModel>(context, listen: false);
+      final success = await editorViewModel.archiveContent(widget.contentId!);
+
+      if (!mounted) return;
+
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('İçerik arşivlendi')),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      // Hata mesajı göster
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('İçerik arşivlenirken hata oluştu: $e')),
+      );
+    }
+  }
+
+
+  // Medya seçme
+  Future<void> _pickMedia() async {
+    final editorViewModel = Provider.of<EditorViewModel>(context, listen: false);
+
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Galeriden Seç'),
+              onTap: () async {
+                Navigator.pop(context);
+                final result = await _imagePicker.pickImage(source: ImageSource.gallery);
+                if (result != null) {
+                  editorViewModel.addMediaFile(File(result.path));
+                }
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Kamera ile Çek'),
+              onTap: () async {
+                Navigator.pop(context);
+                final result = await _imagePicker.pickImage(source: ImageSource.camera);
+                if (result != null) {
+                  editorViewModel.addMediaFile(File(result.path));
+                }
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Thumbnail seçme
+  Future<void> _pickThumbnail() async {
+    final editorViewModel = Provider.of<EditorViewModel>(context, listen: false);
+
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Galeriden Seç'),
+              onTap: () async {
+                Navigator.pop(context);
+                final result = await _imagePicker.pickImage(
+                  source: ImageSource.gallery,
+                  maxWidth: 800,
+                  maxHeight: 450,
+                  imageQuality: 85,
+                );
+                if (result != null) {
+                  editorViewModel.setThumbnail(File(result.path));
+                }
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Kamera ile Çek'),
+              onTap: () async {
+                Navigator.pop(context);
+                final result = await _imagePicker.pickImage(
+                  source: ImageSource.camera,
+                  maxWidth: 800,
+                  maxHeight: 450,
+                  imageQuality: 85,
+                );
+                if (result != null) {
+                  editorViewModel.setThumbnail(File(result.path));
+                }
+              },
+            ),
+            if (_existingContent?.thumbnailUrl != null)
+              ListTile(
+                leading: const Icon(Icons.delete),
+                title: const Text('Mevcut Görseli Kaldır'),
+                onTap: () {
+                  Navigator.pop(context);
+                  editorViewModel.setThumbnail(null);
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Etiket ekleme
+  void _addTag() {
+    final tag = _tagController.text.trim();
+    if (tag.isNotEmpty) {
+      final editorViewModel = Provider.of<EditorViewModel>(context, listen: false);
+      editorViewModel.addTag(tag);
+      _tagController.clear();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(_isEditMode ? S.of(context).editContent : S.of(context).createContent),
+        actions: [
+          // İçeriği Kaydet
+          IconButton(
+            icon: const Icon(Icons.save),
+            onPressed: _saveContent,
+          ),
+          // Düzenleme modunda ekstra seçenekler
+          if (_isEditMode && _existingContent != null)
+            PopupMenuButton<String>(
+              onSelected: (value) async {
+                switch (value) {
+                  case 'publish':
+                    await _publishContent();
+                    break;
+                  case 'unpublish':
+                    await _unpublishContent();
+                    break;
+                  case 'archive':
+                    await _archiveContent();
+                    break;
+                }
+              },
+              itemBuilder: (context) => [
+                // İçerik durumuna bağlı seçenekler
+                if (_existingContent?.status == ContentStatus.draft)
+                  PopupMenuItem<String>(
+                    value: 'publish',
+                    child: Row(
+                      children: [
+                        Icon(Icons.publish, color: Theme.of(context).primaryColor),
+                        const SizedBox(width: 8),
+                        Text(S.of(context).publish),
+                      ],
+                    ),
+                  ),
+                if (_existingContent?.status == ContentStatus.published)
+                  PopupMenuItem<String>(
+                    value: 'unpublish',
+                    child: Row(
+                      children: [
+                        Icon(Icons.unpublished, color: Theme.of(context).primaryColor),
+                        const SizedBox(width: 8),
+                        Text(S.of(context).unpublish),
+                      ],
+                    ),
+                  ),
+                PopupMenuItem<String>(
+                  value: 'archive',
+                  child: Row(
+                    children: [
+                      Icon(Icons.archive, color: Theme.of(context).colorScheme.error), // Hata düzeltildi [cite: 12]
+                      const SizedBox(width: 8),
+                      Text(S.of(context).archived),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+        ],
+      ),
+      body: Consumer<EditorViewModel>(
+        builder: (context, editorViewModel, child) {
+          if (editorViewModel.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          return Form(
+            key: _formKey,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Dil seçimi
+                  _buildLanguageSelector(),
+                  const SizedBox(height: 16),
+                  // Başlık alanı
+                  _buildTitleField(),
+                  const SizedBox(height: 16),
+                  // Özet alanı
+                  _buildSummaryField(),
+                  const SizedBox(height: 16),
+                  // İçerik alanı
+                  _buildContentField(),
+                  const SizedBox(height: 24),
+                  // Kategori ve tür seçimi
+                  _buildCategoryAndTypeSection(editorViewModel),
+                  const SizedBox(height: 24),
+                  // Etiketler
+                  _buildTagsSection(editorViewModel),
+                  const SizedBox(height: 24),
+                  // Medya alanı
+                  _buildMediaSection(editorViewModel),
+                  const SizedBox(height: 24),
+                  // Kapak görseli alanı
+                  _buildThumbnailSection(editorViewModel),
+                  const SizedBox(height: 32),
+                  // Kaydet butonu
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: editorViewModel.isSubmitting ? null : _saveContent,
+                      icon: editorViewModel.isSubmitting
+                          ? Container(
+                        width: 24,
+                        height: 24,
+                        padding: const EdgeInsets.all(2.0),
+                        child: const CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 3,
+                        ),
+                      )
+                          : const Icon(Icons.save),
+                      label: Text(_isEditMode ? 'Güncelle' : 'Oluştur'),
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
                     ),
                   ),
                 ],
               ),
             ),
+<<<<<<< HEAD
           ),
         );
       },
@@ -889,10 +1437,243 @@ class _ContentDetailScreenState extends State<ContentDetailScreen> {
             ],
           ),
         ),
+=======
+          );
+        },
+      ),
+    );
+  }
+
+  // Dil seçimi
+  Widget _buildLanguageSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'İçerik Dili',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith( // Hata düzeltildi [cite: 13]
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: SupportedLanguages.languages.entries.map((entry) {
+              final isActive = _activeLanguage == entry.key;
+              return Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: ChoiceChip(
+                  label: Text(entry.value),
+                  selected: isActive,
+                  onSelected: (selected) {
+                    if (selected) {
+                      setState(() {
+                        _activeLanguage = entry.key;
+                      });
+                    }
+                  },
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+        if (_activeLanguage != 'ku')
+          Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: Text(
+              'Not: Kürtçe (Kurmancî) içerik zorunludur.',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.error, // Hata düzeltildi [cite: 10]
+                fontSize: 12,
+              ),
+            ),
+          ),
       ],
     );
   }
 
+  // Başlık alanı
+  Widget _buildTitleField() {
+    final controller = _titleControllers[_activeLanguage]!;
+    final isKurdish = _activeLanguage == 'ku';
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: '${S.of(context).contentTitle} (${SupportedLanguages.languages[_activeLanguage]})',
+        hintText: 'İçerik başlığını girin',
+        border: const OutlineInputBorder(),
+        suffixIcon: isKurdish ? const Icon(Icons.star, color: Colors.amber) : null,
+      ),
+      validator: isKurdish ? (value) => validateContentTitle(value) : null,
+      maxLength: 100,
+    );
+  }
+
+  // Özet alanı
+  Widget _buildSummaryField() {
+    final controller = _summaryControllers[_activeLanguage]!;
+    final isKurdish = _activeLanguage == 'ku';
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: '${S.of(context).contentSummary} (${SupportedLanguages.languages[_activeLanguage]})',
+        hintText: 'İçerik özeti girin',
+        border: const OutlineInputBorder(),
+        suffixIcon: isKurdish ? const Icon(Icons.star, color: Colors.amber) : null,
+      ),
+      validator: isKurdish ? (value) => validateRequired(value) : null,
+      maxLength: 200,
+      maxLines: 3,
+    );
+  }
+
+  // İçerik alanı
+  Widget _buildContentField() {
+    final controller = _contentControllers[_activeLanguage]!;
+    final isKurdish = _activeLanguage == 'ku';
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: '${S.of(context).contentText} (${SupportedLanguages.languages[_activeLanguage]})',
+        hintText: 'İçerik metnini girin',
+        border: const OutlineInputBorder(),
+        suffixIcon: isKurdish ? const Icon(Icons.star, color: Colors.amber) : null,
+      ),
+      validator: isKurdish ? (value) => validateContentText(value) : null,
+      maxLines: 10,
+    );
+  }
+
+  // Kategori ve tür seçimi
+  Widget _buildCategoryAndTypeSection(EditorViewModel viewModel) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Kategori ve İçerik Türü',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith( // Hata düzeltildi [cite: 14]
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
+        // Kategori seçimi
+        Row(
+          children: [
+            const Text('Kategori: '),
+            const SizedBox(width: 8),
+            Expanded(
+              child: DropdownButtonFormField<ContentCategory>(
+                value: viewModel.contentCategory,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                ),
+                items: ContentCategory.values.map((category) {
+                  String label = '';
+                  IconData icon = Icons.category;
+                  switch (category) {
+                    case ContentCategory.history:
+                      label = S.of(context).history;
+                      icon = Icons.history;
+                      break;
+                    case ContentCategory.language:
+                      label = S.of(context).language;
+                      icon = Icons.language;
+                      break;
+                    case ContentCategory.art:
+                      label = S.of(context).art;
+                      icon = Icons.palette;
+                      break;
+                    case ContentCategory.music:
+                      label = S.of(context).music;
+                      icon = Icons.music_note;
+                      break;
+                    case ContentCategory.traditions:
+                      label = S.of(context).traditions;
+                      icon = Icons.celebration;
+                      break;
+                  }
+                  return DropdownMenuItem<ContentCategory>(
+                    value: category,
+                    child: Row(
+                      children: [
+                        Icon(icon, size: 18),
+                        const SizedBox(width: 8),
+                        Text(label),
+                      ],
+                    ),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    viewModel.setContentCategory(value);
+                  }
+                },
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        // İçerik türü seçimi
+        Row(
+          children: [
+            const Text('İçerik Türü: '),
+            const SizedBox(width: 8),
+            Expanded(
+              child: DropdownButtonFormField<ContentType>(
+                value: viewModel.contentType,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                ),
+                items: ContentType.values.map((type) {
+                  String label = '';
+                  IconData icon = Icons.article;
+                  switch (type) {
+                    case ContentType.text:
+                      label = 'Metin';
+                      icon = Icons.article;
+                      break;
+                    case ContentType.image:
+                      label = 'Görsel';
+                      icon = Icons.image;
+                      break;
+                    case ContentType.video:
+                      label = 'Video';
+                      icon = Icons.video_library;
+                      break;
+                    case ContentType.audio:
+                      label = 'Ses';
+                      icon = Icons.audiotrack;
+                      break;
+                  }
+                  return DropdownMenuItem<ContentType>(
+                    value: type,
+                    child: Row(
+                      children: [
+                        Icon(icon, size: 18),
+                        const SizedBox(width: 8),
+                        Text(label),
+                      ],
+                    ),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    viewModel.setContentType(value);
+                  }
+                },
+              ),
+            ),
+          ],
+        ),
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
+      ],
+    );
+  }
+
+<<<<<<< HEAD
   // Yorumlar listesi
   Widget _buildCommentsList(ContentViewModel contentViewModel) {
     if (contentViewModel.isLoadingComments) {
@@ -1117,6 +1898,266 @@ class _ContentDetailScreenState extends State<ContentDetailScreen> {
           ),
         ],
       ),
+=======
+  // Etiketler alanı
+  Widget _buildTagsSection(EditorViewModel viewModel) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Etiketler',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith( // Hata düzeltildi [cite: 15]
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
+        // Etiket ekleme alanı
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _tagController,
+                decoration: const InputDecoration(
+                  hintText: 'Yeni etiket girin',
+                  border: OutlineInputBorder(),
+                ),
+                onSubmitted: (_) => _addTag(),
+              ),
+            ),
+            const SizedBox(width: 8),
+            IconButton(
+              icon: const Icon(Icons.add_circle),
+              onPressed: _addTag,
+              color: Theme.of(context).primaryColor,
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        // Etiket listesi
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: viewModel.contentTags.map((tag) {
+            return Chip(
+              label: Text(tag),
+              deleteIcon: const Icon(Icons.close, size: 18),
+              onDeleted: () => viewModel.removeTag(tag),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  // Medya alanı
+  Widget _buildMediaSection(EditorViewModel viewModel) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Medya Dosyaları',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith( // Hata düzeltildi [cite: 16]
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
+        // Medya ekleme butonu
+        OutlinedButton.icon(
+          onPressed: _pickMedia,
+          icon: const Icon(Icons.add_photo_alternate),
+          label: const Text('Medya Ekle'),
+        ),
+        const SizedBox(height: 12),
+        // Seçili medya dosyaları
+        if (viewModel.selectedMediaFiles.isNotEmpty)
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
+            ),
+            itemCount: viewModel.selectedMediaFiles.length,
+            itemBuilder: (context, index) {
+              final file = viewModel.selectedMediaFiles[index];
+              return Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.file(
+                    file,
+                    fit: BoxFit.cover,
+                  ),
+                  Positioned(
+                    top: 0,
+                    right: 0,
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.remove_circle,
+                        color: Colors.red,
+                        size: 20,
+                      ),
+                      onPressed: () => viewModel.removeMediaFile(index),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        // Mevcut medya URL'leri (düzenleme modunda)
+        if (_isEditMode && viewModel.mediaUrlsToKeep.isNotEmpty)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 16),
+              Text(
+                'Mevcut Medya Dosyaları',
+                style: Theme.of(context).textTheme.titleSmall, // Hata düzeltildi [cite: 18]
+              ),
+              const SizedBox(height: 8),
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                ),
+                itemCount: viewModel.mediaUrlsToKeep.length,
+                itemBuilder: (context, index) {
+                  final url = viewModel.mediaUrlsToKeep[index];
+                  return Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      CachedNetworkImage(
+                        imageUrl: url,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => const Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                        errorWidget: (context, url, error) => Icon( // Hata düzeltildi [cite: 11]
+                          Icons.error,
+                          color: Theme.of(context).colorScheme.error, // Hata düzeltildi [cite: 11]
+                        ),
+                      ),
+                      Positioned(
+                        top: 0,
+                        right: 0,
+                        child: IconButton(
+                          icon: const Icon(
+                            Icons.remove_circle,
+                            color: Colors.red,
+                            size: 20,
+                          ),
+                          onPressed: () => viewModel.removeMediaUrl(url),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ],
+          ),
+      ],
+    );
+  }
+
+  // Kapak görseli alanı
+  Widget _buildThumbnailSection(EditorViewModel viewModel) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Kapak Görseli',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith( // Hata düzeltildi [cite: 17]
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
+        // Kapak görseli ekleme butonu
+        OutlinedButton.icon(
+          onPressed: _pickThumbnail,
+          icon: const Icon(Icons.add_photo_alternate),
+          label: const Text('Kapak Görseli Ekle'),
+        ),
+        const SizedBox(height: 12),
+        // Seçili kapak görseli
+        if (viewModel.selectedThumbnail != null)
+          Container(
+            width: double.infinity,
+            height: 200,
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.file(
+                    viewModel.selectedThumbnail!,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: IconButton(
+                    icon: const Icon(
+                      Icons.remove_circle,
+                      color: Colors.red,
+                      size: 24,
+                    ),
+                    onPressed: () => viewModel.setThumbnail(null),
+                  ),
+                ),
+              ],
+            ),
+          )
+        // Mevcut kapak görseli (düzenleme modunda)
+        else if (_isEditMode && _existingContent?.thumbnailUrl != null)
+          Container(
+            width: double.infinity,
+            height: 200,
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: CachedNetworkImage(
+                    imageUrl: _existingContent!.thumbnailUrl!,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => const Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                    errorWidget: (context, url, error) => const Icon(
+                      Icons.error,
+                      color: Colors.red,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: IconButton(
+                    icon: const Icon(
+                      Icons.remove_circle,
+                      color: Colors.red,
+                      size: 24,
+                    ),
+                    onPressed: () => viewModel.setThumbnail(null),
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+>>>>>>> 2760134 (Hataların düzeltilmesi ve kod yapısının iyileştirilmesi)
     );
   }
 }

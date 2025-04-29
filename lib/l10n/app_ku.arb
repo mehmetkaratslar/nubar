@@ -1,0 +1,212 @@
+{
+  "@@locale": "ku",
+
+  "appName": "Nûbar",
+  "appDescription": "Platforma Çanda Kurdî",
+
+  // General
+  "ok": "Baş e",
+  "cancel": "Betal",
+  "save": "Tomar bike",
+  "delete": "Jê bibe",
+  "edit": "Biguherîne",
+  "share": "Parve bike",
+  "search": "Lê bigere",
+  "loading": "Tê barkirin...",
+  "retry": "Dîsa biceribîne",
+  "error": "Çewtî",
+  "success": "Serkeftî",
+  "warning": "Hişyarî",
+  "info": "Agahî",
+  "confirm": "Piştrast bike",
+  "close": "Bigire",
+  "next": "Pêşve",
+  "previous": "Paşve",
+  "back": "Vegere",
+  "readMore": "Zêdetir bixwîne",
+  "seeAll": "Hemûyan bibîne",
+  "submit": "Bişîne",
+  "required": "Pêwîst",
+  "optional": "Ne pêwîst",
+  "all": "Hemû",
+
+  // Authentication
+  "login": "Têkeve",
+  "signup": "Tomar bibe",
+  "logout": "Derkeve",
+  "email": "E-peyam",
+  "password": "Şîfre",
+  "confirmPassword": "Şîfre dubare bike",
+  "username": "Navê bikarhêner",
+  "forgotPassword": "Şîfre jibîr kir",
+  "resetPassword": "Şîfre nû bike",
+  "createAccount": "Hesabek çêke",
+  "alreadyHaveAccount": "Hesabê te heye? Têkeve",
+  "dontHaveAccount": "Hesabê te tune? Tomar bibe",
+  "loginWith": "Bi {provider} re têkeve",
+  "@loginWith": {
+    "placeholders": {
+      "provider": {}
+    }
+  },
+  "signupWith": "Bi {provider} re tomar bibe",
+  "@signupWith": {
+    "placeholders": {
+      "provider": {}
+    }
+  },
+
+  // Profile
+  "profile": "Profîl",
+  "editProfile": "Profîl biguherîne",
+  "bio": "Derbarê min de",
+  "changePhoto": "Wêne biguherîne",
+  "changePassword": "Şîfre biguherîne",
+  "accountSettings": "Mîhengên hesab",
+  "savedContents": "Naverokên tomarkirî",
+  "likedContents": "Naverokên ecibandinî",
+  "myComments": "Şîroveyên min",
+  "joinedOn": "Di {date} de tevlî bû",
+  "@joinedOn": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+
+  // Content
+  "categories": "Kategorî",
+  "history": "Dîrok",
+  "language": "Ziman",
+  "art": "Huner",
+  "music": "Muzîk",
+  "traditions": "Kevneşopî",
+  "featuredContents": "Naverokên Taybet",
+  "recentContents": "Naverokên Nû",
+  "popularContents": "Naverokên Populer",
+  "contentDetails": "Hûrgiliyên Naverokê",
+  "likes": "Ecibîn",
+  "comments": "Şîrove",
+  "views": "Dîtin",
+  "addComment": "Şîrove lê zêde bike",
+  "writeComment": "Şîroveyekê binivîse...",
+  "publishedOn": "Di {date} de hat weşandin",
+  "@publishedOn": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "createdBy": "Ji aliyê {username} ve hat afirandin",
+  "@createdBy": {
+    "placeholders": {
+      "username": {}
+    }
+  },
+  "lastEdited": "Guhertina dawî: {date}",
+  "@lastEdited": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "historyDescription": "Agahdarî, bûyer û kesayetiyên girîng ên dîroka Kurdî.",
+  "languageDescription": "Rêzimana Kurdî, peyv, gotinên pêşiyan û zarav.",
+  "artDescription": "Hunera Kurdî, wêje, helbest û wêne.",
+  "musicDescription": "Muzîka Kurdî, stran, amûr û hunermend.",
+  "traditionsDescription": "Kevneşopiyên çanda Kurdî, pîrozbahî û awayê jiyanê.",
+
+  // Editor
+  "editor": "Editor",
+  "editorDashboard": "Panela Edîtorê",
+  "createContent": "Naverok biafirîne",
+  "editContent": "Naverok biguherîne",
+  "contentTitle": "Sernavê Naverokê",
+  "contentSummary": "Kurteya Naverokê",
+  "contentText": "Nivîsa Naverokê",
+  "contentCategory": "Kategoriya Naverokê",
+  "contentType": "Cûreya Naverokê",
+  "contentTags": "Etîketên Naverokê",
+  "addTags": "Etîketan lê zêde bike",
+  "uploadMedia": "Medya bar bike",
+  "uploadThumbnail": "Wêneyek piçûk bar bike",
+  "savedAsDraft": "Wek reşnivîs hat tomarkirin",
+  "publish": "Biweşîne",
+  "unpublish": "Ji weşanê rake",
+  "draft": "Reşnivîs",
+  "published": "Hatiye weşandin",
+  "archived": "Arşîvkirî",
+  "pending": "Li benda",
+  "publishedContents": "Naverokên Weşandî",
+  "draftContents": "Naverokên Reşnivîs",
+  "moderationQueue": "Rêza Moderasyonê",
+  "reportedContents": "Naverokên Rapor Kirî",
+  "reportedComments": "Şîroveyên Rapor Kirî",
+
+  // Reports
+  "report": "Rapor bike",
+  "reportContent": "Naverokê rapor bike",
+  "reportComment": "Şîroveyê rapor bike",
+  "reportReason": "Sedema Raporê",
+  "reportDescription": "Danasîn",
+  "inappropriate": "Naveroka Neyênî",
+  "spam": "Spam",
+  "offensive": "Çêrî/Êrîşkar",
+  "violence": "Tundî",
+  "copyright": "Binpêkirina Mafê Telîfê",
+  "other": "Din",
+  "thanksForReporting": "Ji bo raporkirinê spas. Em ê di demeke nêz de lê binêrin.",
+
+  // Settings
+  "settings": "Mîheng",
+  "general": "Giştî",
+  "account": "Hesab",
+  "notifications": "Hişyarî",
+  "privacy": "Nepenî",
+  "helpAndSupport": "Alîkarî û Piştgirî",
+  "about": "Derbarê",
+  "termsOfService": "Mercên Xizmetê",
+  "privacyPolicy": "Polîtîkaya Nepeniyê",
+  "contactUs": "Têkilî",
+  "feedback": "Paşragihandin",
+  "language": "Ziman",
+  "theme": "Mijar",
+  "darkMode": "Moda Tarî",
+  "lightMode": "Moda Ronî",
+  "systemDefault": "Mîhenga Pergalê",
+
+  // Languages
+  "kurdishKurmanji": "Kurdî (Kurmancî)",
+  "turkish": "Tirkî",
+  "english": "Îngilîzî",
+  "selectLanguage": "Ziman hilbijêre",
+  "languageChanged": "Ziman guhert bo {language}",
+  "@languageChanged": {
+    "placeholders": {
+      "language": {}
+    }
+  },
+
+  // Error Messages
+  "networkError": "Ji kerema xwe girêdana înternetê kontrol bike û dîsa biceribîne.",
+  "generalError": "Çewtiyek çêbû. Ji kerema xwe paşê dîsa biceribîne.",
+  "authError": "Di têketinê de çewtiyek çêbû. Ji kerema xwe dîsa biceribîne.",
+  "invalidEmail": "Ji kerema xwe navnîşana e-peyamê ya derbasdar binivîse.",
+  "weakPassword": "Şîfre divê herî kêm 6 tîp be.",
+  "passwordMismatch": "Şîfre li hev nakin.",
+  "requiredField": "Ev qad pêwîst e.",
+  "uploadError": "Di barkirina pelê de çewtiyek çêbû.",
+  "contentLoadError": "Di barkirina naverokê de çewtiyek çêbû.",
+  "contentCreateError": "Di afirandina naverokê de çewtiyek çêbû.",
+  "commentError": "Di şandina şîroveyê de çewtiyek çêbû.",
+  "permissionDenied": "Destûra te nîne ku vê çalakiyê bike.",
+
+  // Splash Screen
+  "welcomeToNubar": "Bi xêr hatî Nûbar",
+  "discoverKurdishCulture": "Çanda Kurdî Keşf Bike",
+  "getStarted": "Dest pê bike",
+
+  // Help and Support
+  "frequentlyAskedQuestions": "Pirsên Pir Tên Pirsîn",
+  "howToUse": "Çawa tê bikaranîn",
+  "contactSupport": "Bi Tîma Piştgiriyê re Têkilî Deyne",
+  "reportIssue": "Pirsgirêkê rapor bike",
+  "giveFeedback": "Paşragihandin bide"
+}

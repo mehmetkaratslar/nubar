@@ -1,0 +1,212 @@
+{
+  "@@locale": "tr",
+
+  "appName": "Nûbar",
+  "appDescription": "Kürt Kültür Platformu",
+
+  // General
+  "ok": "Tamam",
+  "cancel": "İptal",
+  "save": "Kaydet",
+  "delete": "Sil",
+  "edit": "Düzenle",
+  "share": "Paylaş",
+  "search": "Ara",
+  "loading": "Yükleniyor...",
+  "retry": "Tekrar Dene",
+  "error": "Hata",
+  "success": "Başarılı",
+  "warning": "Uyarı",
+  "info": "Bilgi",
+  "confirm": "Onayla",
+  "close": "Kapat",
+  "next": "İleri",
+  "previous": "Geri",
+  "back": "Geri",
+  "readMore": "Devamını Oku",
+  "seeAll": "Hepsini Gör",
+  "submit": "Gönder",
+  "required": "Zorunlu",
+  "optional": "İsteğe Bağlı",
+  "all": "Tümü",
+
+  // Authentication
+  "login": "Giriş Yap",
+  "signup": "Kayıt Ol",
+  "logout": "Çıkış Yap",
+  "email": "E-posta",
+  "password": "Şifre",
+  "confirmPassword": "Şifre (Tekrar)",
+  "username": "Kullanıcı Adı",
+  "forgotPassword": "Şifremi Unuttum",
+  "resetPassword": "Şifremi Sıfırla",
+  "createAccount": "Hesap Oluştur",
+  "alreadyHaveAccount": "Zaten hesabınız var mı? Giriş yapın",
+  "dontHaveAccount": "Hesabınız yok mu? Kayıt olun",
+  "loginWith": "{provider} ile giriş yap",
+  "@loginWith": {
+    "placeholders": {
+      "provider": {}
+    }
+  },
+  "signupWith": "{provider} ile kayıt ol",
+  "@signupWith": {
+    "placeholders": {
+      "provider": {}
+    }
+  },
+
+  // Profile
+  "profile": "Profil",
+  "editProfile": "Profili Düzenle",
+  "bio": "Hakkımda",
+  "changePhoto": "Fotoğrafı Değiştir",
+  "changePassword": "Şifreyi Değiştir",
+  "accountSettings": "Hesap Ayarları",
+  "savedContents": "Kaydedilen İçerikler",
+  "likedContents": "Beğenilen İçerikler",
+  "myComments": "Yorumlarım",
+  "joinedOn": "{date} tarihinde katıldı",
+  "@joinedOn": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+
+  // Content
+  "categories": "Kategoriler",
+  "history": "Tarih",
+  "language": "Dil",
+  "art": "Sanat",
+  "music": "Müzik",
+  "traditions": "Gelenekler",
+  "featuredContents": "Öne Çıkan İçerikler",
+  "recentContents": "Son Eklenen İçerikler",
+  "popularContents": "Popüler İçerikler",
+  "contentDetails": "İçerik Detayları",
+  "likes": "Beğeni",
+  "comments": "Yorum",
+  "views": "Görüntülenme",
+  "addComment": "Yorum Ekle",
+  "writeComment": "Bir yorum yazın...",
+  "publishedOn": "{date} tarihinde yayınlandı",
+  "@publishedOn": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "createdBy": "{username} tarafından oluşturuldu",
+  "@createdBy": {
+    "placeholders": {
+      "username": {}
+    }
+  },
+  "lastEdited": "Son düzenleme: {date}",
+  "@lastEdited": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "historyDescription": "Kürt tarihine dair bilgiler, olaylar ve önemli kişiler.",
+  "languageDescription": "Kürtçe dil bilgisi, kelimeler, deyimler ve lehçeler.",
+  "artDescription": "Kürt sanatı, edebiyatı, şiir ve resim.",
+  "musicDescription": "Kürt müziği, şarkıları, enstrümanları ve sanatçıları.",
+  "traditionsDescription": "Kürt kültürel gelenekleri, kutlamaları ve yaşam tarzı.",
+
+  // Editor
+  "editor": "Editör",
+  "editorDashboard": "Editör Paneli",
+  "createContent": "İçerik Oluştur",
+  "editContent": "İçerik Düzenle",
+  "contentTitle": "İçerik Başlığı",
+  "contentSummary": "İçerik Özeti",
+  "contentText": "İçerik Metni",
+  "contentCategory": "İçerik Kategorisi",
+  "contentType": "İçerik Tipi",
+  "contentTags": "İçerik Etiketleri",
+  "addTags": "Etiket Ekle",
+  "uploadMedia": "Medya Yükle",
+  "uploadThumbnail": "Küçük Resim Yükle",
+  "savedAsDraft": "Taslak Olarak Kaydedildi",
+  "publish": "Yayınla",
+  "unpublish": "Yayından Kaldır",
+  "draft": "Taslak",
+  "published": "Yayınlandı",
+  "archived": "Arşivlendi",
+  "pending": "Beklemede",
+  "publishedContents": "Yayınlanan İçerikler",
+  "draftContents": "Taslak İçerikler",
+  "moderationQueue": "Moderasyon Sırası",
+  "reportedContents": "Bildirilen İçerikler",
+  "reportedComments": "Bildirilen Yorumlar",
+
+  // Reports
+  "report": "Bildir",
+  "reportContent": "İçeriği Bildir",
+  "reportComment": "Yorumu Bildir",
+  "reportReason": "Bildirim Nedeni",
+  "reportDescription": "Açıklama",
+  "inappropriate": "Uygunsuz İçerik",
+  "spam": "Spam",
+  "offensive": "Hakaret/Saldırgan",
+  "violence": "Şiddet",
+  "copyright": "Telif Hakkı İhlali",
+  "other": "Diğer",
+  "thanksForReporting": "Bildirdiğiniz için teşekkürler. En kısa sürede inceleyeceğiz.",
+
+  // Settings
+  "settings": "Ayarlar",
+  "general": "Genel",
+  "account": "Hesap",
+  "notifications": "Bildirimler",
+  "privacy": "Gizlilik",
+  "helpAndSupport": "Yardım ve Destek",
+  "about": "Hakkında",
+  "termsOfService": "Kullanım Şartları",
+  "privacyPolicy": "Gizlilik Politikası",
+  "contactUs": "Bize Ulaşın",
+  "feedback": "Geribildirim",
+  "language": "Dil",
+  "theme": "Tema",
+  "darkMode": "Karanlık Mod",
+  "lightMode": "Aydınlık Mod",
+  "systemDefault": "Sistem Varsayılanı",
+
+  // Languages
+  "kurdishKurmanji": "Kurdî (Kurmancî)",
+  "turkish": "Türkçe",
+  "english": "English",
+  "selectLanguage": "Dil Seçin",
+  "languageChanged": "Dil {language} olarak değiştirildi",
+  "@languageChanged": {
+    "placeholders": {
+      "language": {}
+    }
+  },
+
+  // Error Messages
+  "networkError": "İnternet bağlantınızı kontrol edin ve tekrar deneyin.",
+  "generalError": "Bir hata oluştu. Lütfen daha sonra tekrar deneyin.",
+  "authError": "Giriş yapılırken bir hata oluştu. Lütfen tekrar deneyin.",
+  "invalidEmail": "Geçerli bir e-posta adresi girin.",
+  "weakPassword": "Şifre en az 6 karakter olmalıdır.",
+  "passwordMismatch": "Şifreler eşleşmiyor.",
+  "requiredField": "Bu alan zorunludur.",
+  "uploadError": "Dosya yüklenirken bir hata oluştu.",
+  "contentLoadError": "İçerik yüklenirken bir hata oluştu.",
+  "contentCreateError": "İçerik oluşturulurken bir hata oluştu.",
+  "commentError": "Yorum gönderilirken bir hata oluştu.",
+  "permissionDenied": "Bu işlemi yapmak için yetkiniz yok.",
+
+  // Splash Screen
+  "welcomeToNubar": "Nûbar'a Hoş Geldiniz",
+  "discoverKurdishCulture": "Kürt Kültürünü Keşfedin",
+  "getStarted": "Başlayın",
+
+  // Help and Support
+  "frequentlyAskedQuestions": "Sıkça Sorulan Sorular",
+  "howToUse": "Nasıl Kullanılır",
+  "contactSupport": "Destek Ekibiyle İletişime Geçin",
+  "reportIssue": "Sorun Bildir",
+  "giveFeedback": "Geribildirim Verin"
+}

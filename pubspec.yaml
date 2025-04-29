@@ -1,0 +1,105 @@
+# ──────────────────────────────────────────────────────────────────────────────
+#          Nubar Kürt Kültür Platformu Mobil Uygulaması - pubspec.yaml
+# ──────────────────────────────────────────────────────────────────────────────
+
+# Proje adı
+name: nubar
+
+# Uygulama açıklaması
+description: >-
+  Kürt kültürünü korumak, yaşatmak ve dünya çapında tanıtmak amacıyla
+  geliştirilen mobil uygulama.
+
+# Proje sürüm numarası (versionName+versionCode)
+version: 1.0.0+1
+
+# ──────────────────────────────────────────────────────────────────────────────
+# 1) Ortam (Dart SDK) sürüm kısıtlamaları
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+# ──────────────────────────────────────────────────────────────────────────────
+# 2) Uygulama Bağımlılıkları
+dependencies:
+  # Flutter çekirdeği
+  flutter:
+    sdk: flutter
+
+  # Çoklu dil ve yerelleştirme
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.19.0         # flutter_localizations’ın talep ettiği sürüm
+
+  # Firebase servisleri
+  firebase_core: ^2.15.0
+  firebase_auth: ^4.7.2
+  cloud_firestore: ^4.8.4
+  firebase_storage: ^11.2.5
+  firebase_analytics: ^10.4.4
+  firebase_dynamic_links: ^5.3.4
+
+  # Durum yönetimi (MVVM için)
+  provider: ^6.0.5
+
+  # UI/UX yardımcı paketleri
+  cupertino_icons: ^1.0.5
+  cached_network_image: ^3.2.3
+  flutter_svg: ^2.0.7
+  shimmer: ^3.0.0
+
+  # Medya ve paylaşım
+  image_picker: ^1.0.1
+  video_player: ^2.7.0
+  chewie: ^1.7.0
+  share_plus: ^7.1.0
+  url_launcher: ^6.1.12
+
+  # Yerel depolama ve çevrimdışı çalışma
+  shared_preferences: ^2.2.0
+  sqflite: ^2.3.0
+  path_provider: ^2.1.0
+  connectivity_plus: ^4.0.2
+
+  # Form, validasyon ve yardımcılar
+  form_field_validator: ^1.1.0
+  timeago: ^3.5.0
+  package_info_plus: ^4.1.0
+
+  # Splash ekranı (asset tabanlı)
+  flutter_native_splash: ^2.3.1
+
+# ──────────────────────────────────────────────────────────────────────────────
+# 3) Geliştirme-bağımlılıkları
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.2
+
+# ──────────────────────────────────────────────────────────────────────────────
+# 4) Flutter özel ayarlar
+flutter:
+  uses-material-design: true
+
+  # Statik varlıklar (images, icons, animations…)
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/animations/
+
+  # Özel fontlar
+  fonts:
+    - family: NotoSans
+      fonts:
+        - asset: assets/fonts/NotoSans-Regular.ttf
+        - asset: assets/fonts/NotoSans-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/NotoSans-Italic.ttf
+          style: italic
+
+# ──────────────────────────────────────────────────────────────────────────────
+# 5) Flutter Intl (ARB) yapılandırması
+flutter_intl:
+  enabled: true
+  main_locale: ku
+  arb_dir: lib/l10n
+  output_dir: lib/generated

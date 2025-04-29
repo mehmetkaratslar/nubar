@@ -1,87 +1,85 @@
-name: nubar
-description: >-
-  Kürt kültürünü korumak, yaşatmak ve dünya çapında tanıtmak amacıyla
-  geliştirilen mobil uygulama.
+# pubspec.yaml
+# Amaç: Projenin bağımlılıklarını, varlıklarını ve yapılandırmalarını tanımlar.
+# Konum: Proje kök dizini (nubar/)
+# Bağlantı: Flutter, bu dosyayı paketleri ve varlıkları yönetmek için kullanır.
 
-# Proje sürümü (versionName+versionCode)
+name: nubar
+description: Kürt kültürünü korumak, yaşatmak ve dünya çapında tanıtmak amacıyla geliştirilen mobil uygulama.
+
+# Uygulama versiyonu
 version: 1.0.0+1
 
-# ──────────────────────────────────────────────────────────────────────────────
-# 1) Ortam (Dart SDK) sürüm kısıtlaması
 environment:
   sdk: ">=3.0.0 <4.0.0"
 
-# ──────────────────────────────────────────────────────────────────────────────
-# 2) Ana bağımlılıklar
 dependencies:
   flutter:
     sdk: flutter
-
-  # Çoklu dil desteği (yerelleştirme)
   flutter_localizations:
     sdk: flutter
 
-  # Tarih/saat, sayılar vb. için uluslararasılaştırma
-  intl: ^0.19.0
-
-  # Firebase çekirdek modülü ve servisler
-  firebase_core: ^2.32.0
-  firebase_auth: ^4.16.0
-  cloud_firestore: ^4.17.5
-  firebase_storage: ^11.6.5
-  firebase_analytics: ^10.4.4
-  firebase_dynamic_links: ^5.3.4
+  # Firebase paketleri - Backend hizmetleri için
+  firebase_core: ^3.0.0          # Firebase temel paket
+  firebase_auth: ^5.0.0          # Kimlik doğrulama için
+  cloud_firestore: ^5.0.0        # Veritabanı için
+  firebase_storage: ^12.0.0      # Medya depolama için
+  firebase_analytics: ^11.0.0    # Kullanım analizi için
+  firebase_dynamic_links: ^6.0.5 # Derin bağlantılar için (güncellendi)
 
   # Google ile giriş
-  google_sign_in: ^6.3.0
+  google_sign_in: ^6.2.1         # Google Sign-In için
 
-  # Durum yönetimi (MVVM için)
-  provider: ^6.0.5
+  # Durum yönetimi
 
-  # UI ve yardımcı paketler
-  cupertino_icons: ^1.0.5
-  cached_network_image: ^3.2.3
-  flutter_svg: ^2.0.7
-  shimmer: ^3.0.0
+  # Görsel ve UI paketleri
+  cupertino_icons: ^1.0.8        # iOS stil ikonlar
+  cached_network_image: ^3.3.1   # Önbellekli görsel yükleme
+  flutter_svg: ^2.0.10           # SVG dosyaları için
+  shimmer: ^3.0.0                # Yükleme animasyonları
 
-  # Medya işlemleri
-  image_picker: ^1.0.1
-  video_player: ^2.7.0
-  chewie: ^1.7.0
-  share_plus: ^7.1.0
-  url_launcher: ^6.1.12
+  # Yerelleştirme ve çoklu dil
+  intl: ^0.19.0                  # Dil ve format desteği
 
-  # Yerel depolama ve veri tabanı
-  shared_preferences: ^2.2.0
-  sqflite: ^2.3.0
-  path_provider: ^2.1.0
-  connectivity_plus: ^4.0.2
+  # Medya işleme
+  image_picker: ^1.1.2           # Kamera/galeri erişimi
+  video_player: ^2.9.1           # Video oynatma
+  chewie: ^1.7.1                 # Video kontrolleri
 
-  # Form validasyonu ve yardımcı paketler
-  form_field_validator: ^1.1.0
-  timeago: ^3.5.0
-  package_info_plus: ^4.1.0
+  # Sosyal medya paylaşımı
+  share_plus: ^9.0.0             # İçerik paylaşımı
+  url_launcher: ^6.3.0           # Bağlantı açma
 
-  # Splash ekran yönetimi
-  flutter_native_splash: ^2.3.1
+  # Çevrimdışı depolama ve önbellekleme
+  shared_preferences: ^2.2.3     # Yerel depolama
+  sqflite: ^2.3.3                # SQL veritabanı
+  path_provider: ^2.1.3          # Dosya sistemi erişimi
 
-# ──────────────────────────────────────────────────────────────────────────────
-# 3) Geliştirme bağımlılıkları
+  # Form ve validasyon
+  form_field_validator: ^1.1.0   # Form validasyonu
+
+  # JavaScript interop (web desteği için)
+  js: ^0.6.7                     # Firebase web bağımlılıkları için
+
+  # Diğer
+  timeago: ^3.6.1                # Zaman formatlaması
+  connectivity_plus: ^6.0.3       # İnternet bağlantısı kontrolü
+  flutter_native_splash: ^2.4.1  # Açılış ekranı
+  package_info_plus: ^8.0.0      # Uygulama bilgileri
+  provider: 6.0.5
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^2.0.2
+  flutter_lints: ^4.0.0          # Kod kalitesi kuralları
 
-# ──────────────────────────────────────────────────────────────────────────────
-# 4) Flutter özel ayarları
+# Flutter yapılandırması
 flutter:
   uses-material-design: true
-  generate: true
 
   assets:
-    - assets/images/
-    - assets/icons/
-    - assets/animations/
+    - assets/images/           # Resimler
+    - assets/icons/            # İkonlar
+    - assets/animations/       # Animasyonlar
 
   fonts:
     - family: NotoSans
@@ -92,13 +90,4 @@ flutter:
         - asset: assets/fonts/NotoSans-Italic.ttf
           style: italic
 
-# ──────────────────────────────────────────────────────────────────────────────
-# 5) Flutter Intl Yapılandırması
-flutter_intl:
-  enabled: true
-  main_locale: ku
-  arb_dir: lib/l10n
-  output_dir: lib/generated
-  class_name: S
-  template_arb_file: app_en.arb  # Varsayılan template dosyasını açıkça belirtiyoruz
-  output_localization_file: l10n.dart
+  generate: true

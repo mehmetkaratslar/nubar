@@ -1,30 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'views/splash/splash_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
+
+import 'services/auth_service.dart';
+import 'viewmodels/auth_viewmodel.dart';
 import 'utils/theme.dart';
+import 'utils/constants.dart';
+import 'views/splash/splash_screen.dart';
 
-
-// Uygulamanın giriş noktası - sadeleştirilmiş temel hali
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class App extends StatelessWidget {
+  const App({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Nûbar - Kürt Kültür Platformu',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-
-      themeMode: ThemeMode.system,
-      locale: const Locale('ku'), // Varsayılan dil Kürtçe
-      localizationsDelegates: const [
-        S.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthViewModel()),
       ],
-      supportedLocales: S.delegate.supportedLocales,
-      home: const SplashScreen(),
+      child: MaterialApp(
+        title: 'NÛBAR',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme,
+        supportedLocales: AppConstants.supportedLocales,
+        localizationsDelegates: [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        home: SplashScreen(),
+      ),
     );
   }
 }

@@ -1,57 +1,53 @@
-// lib/services/analytics_service.dart
-// Amaç: Analitik olayları yönetir.
-// Konum: lib/services/
-// Bağlantılar:
-// - ViewModel'lar tarafından kullanılır (örneğin, ProfileViewModel, EditorViewModel, HomeViewModel).
-
+// Dosya: lib/services/analytics_service.dart
 import 'package:firebase_analytics/firebase_analytics.dart';
 
 enum AnalyticsEventType {
-  contentCreated,
-  profileUpdated,
-  userLogin,
-  userSignup,
-  searchContent,
-  userScreenView,
   filterByCategory,
+  searchContent,
+  viewContent,
+  createComment,
+  likeContent,
+  saveContent,
+  shareContent,
+  reportContent,
+  reportComment,
+  editorCreateContent,
+  editorPublishContent,
+  profileUpdate,
+  changeLanguage,
+  viewHomePage,
 }
 
 class AnalyticsService {
   final FirebaseAnalytics _analytics = FirebaseAnalytics.instance;
 
-  Future<void> logEvent(AnalyticsEventType eventType, Map<String, Object> parameters) async {
+  // Olay kaydet
+  Future<void> logEvent(AnalyticsEventType eventType, Map<String, Object?> parameters) async {
     try {
-      String eventName;
-      switch (eventType) {
-        case AnalyticsEventType.contentCreated:
-          eventName = 'content_created';
-          break;
-        case AnalyticsEventType.profileUpdated:
-          eventName = 'profile_updated';
-          break;
-        case AnalyticsEventType.userLogin:
-          eventName = 'user_login';
-          break;
-        case AnalyticsEventType.userSignup:
-          eventName = 'user_signup';
-          break;
-        case AnalyticsEventType.searchContent:
-          eventName = 'search_content';
-          break;
-        case AnalyticsEventType.userScreenView:
-          eventName = 'screen_view';
-          break;
-        case AnalyticsEventType.filterByCategory:
-          eventName = 'filter_by_category';
-          break;
-      }
       await _analytics.logEvent(
-        name: eventName,
+        name: eventType.toString().split('.').last,
         parameters: parameters,
       );
     } catch (e) {
-      print('Analitik olay kaydedilirken hata: $e');
-      rethrow;
+      print('Analytics olayı kaydedilirken hata: $e');
+    }
+  }
+
+  // Ekran görüntüleme olayı kaydet
+  Future<void> logScreenView({required String screenName}) async {
+    try {
+      await _analytics.logScreenView(screenName: screenName);
+    } catch (e) {
+      print('Ekran görüntüleme olayı kaydedilirken hata: $e');
+    }
+  }
+
+  // Kullanıcı ID'sini ayarla
+  Future<void> setUserId(String? userId) async {
+    try {
+      await _analytics.setUserId(id: userId);
+    } catch (e) {
+      print('Kullanıcı ID\'si ayarlanırken hata: $e');
     }
   }
 }

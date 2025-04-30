@@ -1,3 +1,6 @@
+// Dosya: lib/models/report_model.dart
+// Amaç: Şikayet verilerini temsil eder.
+// Bağlantı: editor_viewmodel.dart’ta kullanılır.
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ReportModel {
@@ -8,7 +11,7 @@ class ReportModel {
   final String reporterName;
   final String reason;
   final String description;
-  final String status; // 'pending', 'resolved', 'rejected'
+  final String status;
   final Timestamp createdAt;
   final Timestamp? resolvedAt;
 
@@ -25,7 +28,6 @@ class ReportModel {
     this.resolvedAt,
   });
 
-  // Firestore'dan veri oluştur
   factory ReportModel.fromMap(Map<String, dynamic> map, String id) {
     return ReportModel(
       id: id,
@@ -41,7 +43,6 @@ class ReportModel {
     );
   }
 
-  // Firestore'a kaydetmek için Map'e çevir
   Map<String, dynamic> toMap() {
     return {
       'contentId': contentId,
@@ -56,7 +57,6 @@ class ReportModel {
     };
   }
 
-  // Kopyasını oluştur
   ReportModel copyWith({
     String? contentId,
     String? contentTitle,
@@ -69,7 +69,7 @@ class ReportModel {
     Timestamp? resolvedAt,
   }) {
     return ReportModel(
-      id: this.id,
+      id: id,
       contentId: contentId ?? this.contentId,
       contentTitle: contentTitle ?? this.contentTitle,
       reporterId: reporterId ?? this.reporterId,

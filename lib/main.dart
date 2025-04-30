@@ -1,107 +1,61 @@
-import 'package:flutter/material.dart';
+// Dosya: lib/main.dart
+// Amaç: Uygulamanın giriş noktası, Firebase ve servisleri başlatır, App widget’ına bağımlılıkları enjekte eder.
+// Bağlantı: App widget’ı (app.dart) ile bağlantılıdır, tüm ekranlara altyapı sağlar.
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import 'firebase_options.dart';
-import 'services/firestore_service.dart';
+import 'firebase_options.dart'; // Doğru firebase_options.dart dosyasını import ediyoruz
 import 'services/auth_service.dart';
+import 'services/firestore_service.dart';
 import 'viewmodels/auth_viewmodel.dart';
-import 'viewmodels/profile_viewmodel.dart';
 import 'viewmodels/content_viewmodel.dart';
-import 'viewmodels/search_viewmodel.dart';
 import 'viewmodels/home_viewmodel.dart';
-import 'viewmodels/editor_viewmodel.dart';
-import 'views/splash/splash_screen.dart';
-import 'utils/constants.dart';
+import 'viewmodels/profile_viewmodel.dart';
+import 'viewmodels/search_viewmodel.dart';
+import 'app.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-
-  // Paylaşılan servisleri başlat
-  final firestoreService = FirestoreService();
-  final authService = AuthService();
-
-  // Paylaşılan tercih deposunu başlat
+  try {
+    // Firebase’i lib/firebase_options.dart’tan gelen yapılandırma ile başlatıyoruz
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    print("Firebase başarıyla başlatıldı.");
+  } catch (e) {
+    print("Firebase başlatma hatası: $e");
+  }
   final sharedPreferences = await SharedPreferences.getInstance();
+  final authService = AuthService();
+  final firestoreService = FirestoreService();
 
   runApp(
     MultiProvider(
       providers: [
-        // Servisler
-        Provider<FirestoreService>.value(value: firestoreService),
         Provider<AuthService>.value(value: authService),
-        Provider<SharedPreferences>.value(value: sharedPreferences),
-
-        // ViewModeller
+        Provider<FirestoreService>.value(value: firestoreService),
         ChangeNotifierProvider(
-          create: (_) => AuthViewModel(
-            authService: authService,
-            firestoreService: firestoreService,
-            sharedPreferences: sharedPreferences,
-          ),
+          create: (_) => AuthViewModel(authService, sharedPreferences),
         ),
         ChangeNotifierProvider(
-          create: (_) => ProfileViewModel(firestoreService: firestoreService),
+          create: (_) => HomeViewModel(firestoreService),
         ),
         ChangeNotifierProvider(
-          create: (_) => ContentViewModel(firestoreService: firestoreService),
+          create: (_) => ContentViewModel(firestoreService),
         ),
         ChangeNotifierProvider(
-          create: (_) => SearchViewModel(firestoreService: firestoreService),
+          create: (_) => ProfileViewModel(firestoreService),
         ),
         ChangeNotifierProvider(
-          create: (_) => HomeViewModel(firestoreService: firestoreService),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => EditorViewModel(firestoreService: firestoreService),
+          create: (_) => SearchViewModel(firestoreService),
         ),
       ],
-      child: const NubarApp(),
+      child: App(
+        authService: authService,
+        firestoreService: firestoreService,
+        sharedPreferences: sharedPreferences,
+      ),
     ),
   );
-}
-
-class NubarApp extends StatelessWidget {
-  const NubarApp({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Nûbar',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primaryColor: Constants.primaryColor,
-        hintColor: Constants.accentColor,
-        scaffoldBackgroundColor: Constants.bgColor,
-        fontFamily: 'NotoSans',
-        textTheme: const TextTheme(
-          headlineLarge: Constants.headingStyle,
-          headlineMedium: Constants.subheadingStyle,
-          titleLarge: Constants.titleStyle,
-          bodyLarge: Constants.bodyStyle,
-          bodySmall: Constants.captionStyle,
-        ),
-        colorScheme: ColorScheme.fromSwatch().copyWith(
-          primary: Constants.primaryColor,
-          secondary: Constants.secondaryColor,
-        ),
-      ),
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: const [
-        Locale('ku', 'TR'), // Kurmancî
-        Locale('tr', 'TR'), // Türkçe
-        Locale('en', 'US'), // İngilizce
-      ],
-      home: SplashScreen(),
-    );
-  }
 }

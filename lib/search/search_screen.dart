@@ -1,12 +1,13 @@
+// Dosya: lib/views/search/search_screen.dart
+// Amaç: İçerik arama ekranı.
+// Bağlantı: home_screen.dart’tan arama ikonuna tıklanınca çağrılır.
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../models/content_model.dart';
-import '../../utils/constants.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../viewmodels/search_viewmodel.dart';
+import '../../models/content_model.dart';
+import '../utils/app_constants.dart';
 
-import '../views/content/content_detail_screen.dart';
-import '../views/shared/content_card.dart';
-import '../views/shared/loading_indicator.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({Key? key}) : super(key: key);
@@ -16,17 +17,8 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  final TextEditingController _searchController = TextEditingController();
-  bool _isSearching = false;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // ViewModel'i temizle
-      Provider.of<SearchViewModel>(context, listen: false).clearSearch();
-    });
-  }
+  final _searchController = TextEditingController();
+  String _currentQuery = '';
 
   @override
   void dispose() {
@@ -34,140 +26,228 @@ class _SearchScreenState extends State<SearchScreen> {
     super.dispose();
   }
 
-  void _performSearch(String query) {
-    if (query.trim().isNotEmpty) {
-      setState(() {
-        _isSearching = true;
-      });
-
-      // ViewModel üzerinden arama yap
-      Provider.of<SearchViewModel>(context, listen: false)
-          .searchContents(query)
-          .then((_) {
-        setState(() {
-          _isSearching = false;
-        });
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final searchViewModel = Provider.of<SearchViewModel>(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Ara', style: Constants.titleStyle),
-        backgroundColor: Constants.bgColor,
-        elevation: 0,
-      ),
-      body: Column(
-        children: [
-          // Arama kutusu
-          Padding(
-            padding: const EdgeInsets.all(Constants.defaultPadding),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Ne arıyorsunuz?',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: () {
-                    _searchController.clear();
-                    Provider.of<SearchViewModel>(context, listen: false).clearSearch();
-                  },
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(Constants.defaultRadius),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                    vertical: 12.0,
-                    horizontal: 16.0
-                ),
-              ),
-              onSubmitted: _performSearch,
-              textInputAction: TextInputAction.search,
-            ),
-          ),
-
-          // Arama sonuçları
-          Expanded(
-            child: Consumer<SearchViewModel>(
-              builder: (context, searchViewModel, child) {
-                if (_isSearching) {
-                  return const Center(child: LoadingIndicator());
-                }
-
-                if (_searchController.text.isEmpty) {
-                  return const Center(
-                    child: Text(
-                      'Arama yapmak için bir şeyler yazın',
-                      style: Constants.bodyStyle,
-                    ),
-                  );
-                }
-
-                final searchResults = searchViewModel.searchResults;
-
-                if (searchViewModel.errorMessage != null) {
-                  return Center(
-                    child: Text(
-                      'Hata: ${searchViewModel.errorMessage}',
-                      style: const TextStyle(color: Colors.red),
-                    ),
-                  );
-                }
-
-                if (searchResults.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.search_off,
-                          size: 64,
-                          color: Constants.subtextColor,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Sonuç bulunamadı',
-                          style: Constants.subheadingStyle.copyWith(
-                            color: Constants.subtextColor,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Başka anahtar kelimelerle aramayı deneyin',
-                          style: Constants.captionStyle,
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                return ListView.builder(
-                  padding: const EdgeInsets.all(Constants.smallPadding),
-                  itemCount: searchResults.length,
-                  itemBuilder: (context, index) {
-                    final content = searchResults[index];
-                    return ContentCard(
-                      content: content,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ContentDetailScreen(
-                              contentId: content.id,
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                );
+        title: TextField(
+          controller: _searchController,
+          decoration: InputDecoration(
+            hintText: 'Ara...',
+            border: InputBorder.none,
+            suffixIcon: IconButton(
+              icon: const Icon(Icons.clear),
+              onPressed: () {
+                _searchController.clear();
+                setState(() {
+                  _currentQuery = '';
+                });
+                searchViewModel.searchContents('');
               },
             ),
           ),
+          onSubmitted: (value) {
+            setState(() {
+              _currentQuery = value.trim();
+            });
+            if (_currentQuery.isNotEmpty) {
+              searchViewModel.searchContents(_currentQuery);
+            }
+          },
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {
+              setState(() {
+                _currentQuery = _searchController.text.trim();
+              });
+              if (_currentQuery.isNotEmpty) {
+                searchViewModel.searchContents(_currentQuery);
+              }
+            },
+          ),
         ],
+      ),
+      body: _buildSearchResults(searchViewModel),
+    );
+  }
+
+  Widget _buildSearchResults(SearchViewModel searchViewModel) {
+    if (_currentQuery.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.search,
+              size: 80,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'İçerik aramak için yukarıdaki arama kutusunu kullanın',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 16,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (searchViewModel.searchResults.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.search_off,
+              size: 80,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              '"$_currentQuery" aramasına uygun sonuç bulunamadı',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 16,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Farklı anahtar kelimelerle tekrar deneyin',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 14,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: searchViewModel.searchResults.length,
+      itemBuilder: (context, index) {
+        final content = searchViewModel.searchResults[index];
+        return _buildSearchResultItem(content);
+      },
+    );
+  }
+
+  Widget _buildSearchResultItem(ContentModel content) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.pushNamed(
+          context,
+          '/content_detail',
+          arguments: content.id,
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 5,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.horizontal(left: Radius.circular(12)),
+              child: content.imageUrl != null
+                  ? CachedNetworkImage(
+                imageUrl: content.imageUrl!,
+                height: 100,
+                width: 100,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Container(
+                  height: 100,
+                  width: 100,
+                  color: Colors.grey[300],
+                  child: const Center(child: CircularProgressIndicator()),
+                ),
+                errorWidget: (context, url, error) => Container(
+                  height: 100,
+                  width: 100,
+                  color: Colors.grey[300],
+                  child: const Icon(Icons.error),
+                ),
+              )
+                  : Container(
+                height: 100,
+                width: 100,
+                color: Colors.grey[300],
+                child: Center(
+                  child: Icon(
+                    Icons.image,
+                    size: 30,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppConstants.lightGray,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        content.category,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppConstants.darkGray,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      content.title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      content.description,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1,470 +1,444 @@
-import 'package:flutter/material.dart';
+// Dosya: lib/viewmodels/content_viewmodel.dart
+// Amaç: İçerik işlemlerini yönetir (listeleme, alma, beğenme, yorumlama).
+// Bağlantı: content_detail_screen.dart, home_screen.dart ile çalışır.
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'dart:io';
-import '../models/content_model.dart';
+import 'package:flutter/material.dart';
 import '../services/firestore_service.dart';
-import '../utils/constants.dart';
+import '../models/content_model.dart';
+import '../models/comment_model.dart';
 
 class ContentViewModel with ChangeNotifier {
   final FirestoreService _firestoreService;
   final FirebaseStorage _storage = FirebaseStorage.instance;
-
-  ContentModel? _currentContent;
-  List<ContentModel> _relatedContents = [];
-  List<Map<String, dynamic>> _comments = [];
-
+  List<ContentModel> _contents = [];
+  List<ContentModel> _featuredContents = [];
+  ContentModel? _selectedContent;
+  List<CommentModel> _comments = [];
   bool _isLoading = false;
   bool _isSubmitting = false;
   String? _errorMessage;
   bool _isLiked = false;
-  bool _isSaved = false;
 
-  ContentViewModel({required FirestoreService firestoreService})
-      : _firestoreService = firestoreService;
+  ContentViewModel(this._firestoreService);
 
-  ContentModel? get currentContent => _currentContent;
-  List<ContentModel> get relatedContents => _relatedContents;
-  List<Map<String, dynamic>> get comments => _comments;
+  List<ContentModel> get contents => _contents;
+  List<ContentModel> get featuredContents => _featuredContents;
+  ContentModel? get currentContent => _selectedContent;
+  List<CommentModel> get comments => _comments;
   bool get isLoading => _isLoading;
   bool get isSubmitting => _isSubmitting;
   String? get errorMessage => _errorMessage;
   bool get isLiked => _isLiked;
-  bool get isSaved => _isSaved;
 
-  // İçerik detaylarını yükle
-  Future<void> loadContent(String contentId, String userId) async {
+  // Tüm içerikleri çeker
+  Future<void> fetchContents() async {
     try {
       _setLoading(true);
-
-      // İçerik bilgilerini getir
-      _currentContent = await _firestoreService.getContentById(contentId);
-
-      if (_currentContent != null) {
-        // İlgili içerikleri getir (aynı kategoriden)
-        await _loadRelatedContents(_currentContent!.category);
-
-        // Yorumları getir
-        await _loadComments(contentId);
-
-        // Kullanıcının beğeni durumunu kontrol et
-        _isLiked = await _firestoreService.isContentLikedByUser(contentId, userId);
-
-        // Kullanıcının kaydetme durumunu kontrol et (sadece UI güncellemesi için)
-        // Bu değer gerçek kayıtlı durumu yansıtmayabilir, profile_viewmodel içinde gerçek durum kontrol edilmelidir
-        _isSaved = false; // Varsayılan değer
-
-        _errorMessage = null;
-      } else {
-        _errorMessage = 'İçerik bulunamadı';
-      }
-
+      final data = await _firestoreService.getContents();
+      _contents = data.map((map) => ContentModel.fromMap(map, map['id'])).toList();
+      _errorMessage = null;
       notifyListeners();
     } catch (e) {
-      _errorMessage = 'İçerik yüklenirken hata oluştu: ${e.toString()}';
+      _errorMessage = 'İçerikler yüklenemedi: $e';
       print(_errorMessage);
     } finally {
       _setLoading(false);
     }
   }
 
-  // İlgili içerikleri yükle
-  Future<void> _loadRelatedContents(String category) async {
+  // Öne çıkan içerikleri çeker
+  Future<void> fetchFeaturedContents() async {
     try {
-      // Aynı kategoriden benzer içerikleri getir
-      List<ContentModel> contents = await _firestoreService.getContentsByCategory(
-        category,
-        limit: 5,
-      );
-
-      // Mevcut içeriği listeden çıkar (eğer varsa)
-      if (_currentContent != null) {
-        contents = contents.where((content) => content.id != _currentContent!.id).toList();
-      }
-
-      _relatedContents = contents;
-    } catch (e) {
-      print('İlgili içerikler yüklenirken hata oluştu: ${e.toString()}');
-    }
-  }
-
-  // Yorumları yükle
-  Future<void> _loadComments(String contentId) async {
-    try {
-      _comments = await _firestoreService.getCommentsForContent(contentId);
-    } catch (e) {
-      print('Yorumlar yüklenirken hata oluştu: ${e.toString()}');
-    }
-  }
-
-  // Yorum ekle
-  Future<bool> addComment(String contentId, String userId, String text) async {
-    if (text.trim().isEmpty) return false;
-
-    try {
-      _setSubmitting(true);
-
-      String commentId = await _firestoreService.addComment(contentId, userId, text);
-
-      // Yorumları yeniden yükle
-      await _loadComments(contentId);
-
-      // Mevcut içeriğin yorum sayısını güncelle
-      if (_currentContent != null) {
-        _currentContent = _currentContent!.copyWith(
-          commentCount: _currentContent!.commentCount + 1,
-        );
-      }
-
+      _setLoading(true);
+      final data = await _firestoreService.getContents();
+      _featuredContents = data
+          .map((map) => ContentModel.fromMap(map, map['id']))
+          .where((content) => content.isFeatured)
+          .take(5)
+          .toList();
+      _errorMessage = null;
       notifyListeners();
-      return true;
     } catch (e) {
-      _errorMessage = 'Yorum eklenirken hata oluştu: ${e.toString()}';
+      _errorMessage = 'Öne çıkan içerikler yüklenemedi: $e';
       print(_errorMessage);
-      return false;
     } finally {
-      _setSubmitting(false);
+      _setLoading(false);
     }
   }
 
-  // Yorum sil
-  Future<bool> deleteComment(String contentId, String commentId) async {
+  // ID’ye göre içerik alır
+  Future<ContentModel?> getContentById(String id) async {
     try {
-      _setSubmitting(true);
-
-      await _firestoreService.deleteComment(contentId, commentId);
-
-      // Yorumları yeniden yükle
-      await _loadComments(contentId);
-
-      // Mevcut içeriğin yorum sayısını güncelle
-      if (_currentContent != null) {
-        _currentContent = _currentContent!.copyWith(
-          commentCount: _currentContent!.commentCount - 1,
-        );
+      final data = await _firestoreService.getContentById(id);
+      if (data != null) {
+        return ContentModel.fromMap(data, id);
       }
-
-      notifyListeners();
-      return true;
+      return null;
     } catch (e) {
-      _errorMessage = 'Yorum silinirken hata oluştu: ${e.toString()}';
-      print(_errorMessage);
-      return false;
-    } finally {
-      _setSubmitting(false);
+      print('İçerik alma hatası: $e');
+      return null;
     }
   }
 
-  // İçerik beğen/beğeni kaldır
-  Future<bool> toggleLike(String contentId, String userId) async {
+  // ID’ye göre içerik yükler
+  Future<void> loadContent(String id) async {
     try {
-      _setSubmitting(true);
-
-      await _firestoreService.toggleLikeContent(contentId, userId);
-
-      // Beğeni durumunu güncelle
-      _isLiked = !_isLiked;
-
-      // Mevcut içeriğin beğeni sayısını güncelle
-      if (_currentContent != null) {
-        _currentContent = _currentContent!.copyWith(
-          likeCount: _isLiked
-              ? _currentContent!.likeCount + 1
-              : _currentContent!.likeCount - 1,
+      _setLoading(true);
+      final data = await _firestoreService.getContentById(id);
+      if (data != null) {
+        _selectedContent = ContentModel.fromMap(data, id);
+        await FirebaseFirestore.instance.collection('contents').doc(id).update({
+          'viewCount': (_selectedContent!.viewCount + 1),
+        });
+        _selectedContent = _selectedContent!.copyWith(
+          viewCount: _selectedContent!.viewCount + 1,
         );
+        await fetchComments(id);
+      } else {
+        _errorMessage = 'İçerik bulunamadı.';
       }
-
       notifyListeners();
-      return true;
     } catch (e) {
-      _errorMessage = 'Beğeni işlemi sırasında hata oluştu: ${e.toString()}';
+      _errorMessage = 'İçerik yüklenemedi: $e';
       print(_errorMessage);
-      return false;
     } finally {
-      _setSubmitting(false);
+      _setLoading(false);
     }
   }
 
-  // Yeni içerik oluştur
-  Future<String?> createContent({
+  // Kategoriye göre içerikleri alır
+  Future<void> getContentsByCategory(String category) async {
+    try {
+      _setLoading(true);
+      final data = await _firestoreService.getContents();
+      _contents = data
+          .map((map) => ContentModel.fromMap(map, map['id']))
+          .where((content) => content.category == category)
+          .toList();
+      _errorMessage = null;
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = 'İçerikler yüklenemedi: $e';
+      print(_errorMessage);
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  // Yorumları yükler
+  Future<void> fetchComments(String contentId) async {
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('contents')
+          .doc(contentId)
+          .collection('comments')
+          .orderBy('createdAt', descending: true)
+          .get();
+      _comments = snapshot.docs.map((doc) => CommentModel.fromMap(doc.data(), doc.id)).toList();
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = 'Yorumlar yüklenemedi: $e';
+      print(_errorMessage);
+    }
+  }
+
+  // Yeni içerik ekler
+  Future<bool> addContent({
     required String title,
-    required String content,
-    required String userId,
-    required String userDisplayName,
-    String? userPhotoUrl,
+    required String description,
     required String category,
     required String language,
-    List<File>? mediaFiles,
-    Map<String, dynamic>? translatedTitles,
-    Map<String, dynamic>? translatedContents,
+    File? imageFile,
+    bool isFeatured = false,
+    required String userId,
+    required String authorName,
   }) async {
     try {
-      _setSubmitting(true);
-
-      List<String>? mediaUrls;
-      String? thumbnailUrl;
-
-      // Medya dosyalarını yükle (eğer varsa)
-      if (mediaFiles != null && mediaFiles.isNotEmpty) {
-        mediaUrls = [];
-
-        for (int i = 0; i < mediaFiles.length; i++) {
-          String fileName = 'contents/${userId}_${DateTime.now().millisecondsSinceEpoch}_$i';
-          Reference ref = _storage.ref().child(fileName);
-
-          await ref.putFile(mediaFiles[i]);
-          String url = await ref.getDownloadURL();
-
-          mediaUrls.add(url);
-
-          // İlk dosyayı thumbnail olarak kullan
-          if (i == 0) {
-            thumbnailUrl = url;
-          }
-        }
+      _setLoading(true);
+      String? imageUrl;
+      if (imageFile != null) {
+        String fileName = 'content_images/${DateTime.now().millisecondsSinceEpoch}_${imageFile.path.split('/').last}';
+        Reference ref = _storage.ref().child(fileName);
+        await ref.putFile(imageFile);
+        imageUrl = await ref.getDownloadURL();
       }
 
-      // İçerik nesnesi oluştur
-      ContentModel newContent = ContentModel(
-        id: '', // Firestore oluştururken ata
-        title: title,
-        content: content,
-        userId: userId,
-        userDisplayName: userDisplayName,
-        userPhotoUrl: userPhotoUrl,
-        category: category,
-        language: language,
-        mediaUrls: mediaUrls,
-        thumbnailUrl: thumbnailUrl,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        likeCount: 0,
-        commentCount: 0,
-        isFeatured: false,
-        isPublished: true,
-        translatedTitles: translatedTitles,
-        translatedContents: translatedContents,
-      );
-
-      // İçeriği Firestore'a kaydet
-      String contentId = await _firestoreService.createContent(newContent);
-
-      return contentId;
-    } catch (e) {
-      _errorMessage = 'İçerik oluşturulurken hata oluştu: ${e.toString()}';
-      print(_errorMessage);
-      return null;
-    } finally {
-      _setSubmitting(false);
-    }
-  }
-
-  // İçerik güncelle
-  Future<bool> updateContent({
-    required String contentId,
-    String? title,
-    String? content,
-    String? category,
-    String? language,
-    List<File>? newMediaFiles,
-    List<String>? removeMediaUrls,
-    String? thumbnailUrl,
-    Map<String, dynamic>? translatedTitles,
-    Map<String, dynamic>? translatedContents,
-  }) async {
-    try {
-      _setSubmitting(true);
-
-      // Önce mevcut içeriği al
-      ContentModel? existingContent = await _firestoreService.getContentById(contentId);
-      if (existingContent == null) {
-        _errorMessage = 'İçerik bulunamadı';
-        return false;
-      }
-
-      List<String> updatedMediaUrls = List<String>.from(existingContent.mediaUrls ?? []);
-
-      // Kaldırılacak medya dosyalarını işle
-      if (removeMediaUrls != null && removeMediaUrls.isNotEmpty) {
-        for (String url in removeMediaUrls) {
-          // Storage'dan dosyayı sil
-          try {
-            Reference ref = _storage.refFromURL(url);
-            await ref.delete();
-          } catch (e) {
-            print('Medya dosyası silinirken hata oluştu: ${e.toString()}');
-            // İşlem devam etsin
-          }
-
-          // URL'yi listeden kaldır
-          updatedMediaUrls.remove(url);
-        }
-      }
-
-      // Yeni medya dosyalarını yükle
-      if (newMediaFiles != null && newMediaFiles.isNotEmpty) {
-        for (int i = 0; i < newMediaFiles.length; i++) {
-          String fileName = 'contents/${existingContent.userId}_${DateTime.now().millisecondsSinceEpoch}_$i';
-          Reference ref = _storage.ref().child(fileName);
-
-          await ref.putFile(newMediaFiles[i]);
-          String url = await ref.getDownloadURL();
-
-          updatedMediaUrls.add(url);
-        }
-      }
-
-      // Thumbnail URL'yi güncelle
-      String? updatedThumbnailUrl = thumbnailUrl;
-      if (updatedThumbnailUrl == null && updatedMediaUrls.isNotEmpty) {
-        // Eğer thumbnail belirtilmemişse ve medya dosyaları varsa, ilk dosyayı kullan
-        updatedThumbnailUrl = updatedMediaUrls.first;
-      }
-
-      // Güncellenecek alanları topla
-      Map<String, dynamic> updates = {
-        'updatedAt': FieldValue.serverTimestamp(),
+      final newContent = {
+        'title': title,
+        'description': description,
+        'category': category,
+        'language': language,
+        'imageUrl': imageUrl,
+        'userId': userId,
+        'authorName': authorName,
+        'isFeatured': isFeatured,
+        'viewCount': 0,
+        'likeCount': 0,
+        'commentCount': 0,
+        'createdAt': FieldValue.serverTimestamp(),
       };
 
-      if (title != null) updates['title'] = title;
-      if (content != null) updates['content'] = content;
-      if (category != null) updates['category'] = category;
-      if (language != null) updates['language'] = language;
-      if (updatedMediaUrls.isNotEmpty) updates['mediaUrls'] = updatedMediaUrls;
-      if (updatedThumbnailUrl != null) updates['thumbnailUrl'] = updatedThumbnailUrl;
-      if (translatedTitles != null) updates['translatedTitles'] = translatedTitles;
-      if (translatedContents != null) updates['translatedContents'] = translatedContents;
-
-      // İçeriği güncelle
-      await _firestoreService.updateContent(contentId, updates);
-
-      // Mevcut içeriği güncelle
-      if (_currentContent != null && _currentContent!.id == contentId) {
-        _currentContent = ContentModel.fromMap({
-          ..._currentContent!.toMap(),
-          ...updates,
-        }, contentId);
-
-        notifyListeners();
-      }
-
-      return true;
-    } catch (e) {
-      _errorMessage = 'İçerik güncellenirken hata oluştu: ${e.toString()}';
-      print(_errorMessage);
-      return false;
-    } finally {
-      _setSubmitting(false);
-    }
-  }
-
-  // İçerik sil
-  Future<bool> deleteContent(String contentId) async {
-    try {
-      _setSubmitting(true);
-
-      // Önce mevcut içeriği al
-      ContentModel? content = await _firestoreService.getContentById(contentId);
-      if (content == null) {
-        _errorMessage = 'İçerik bulunamadı';
-        return false;
-      }
-
-      // Medya dosyalarını sil
-      if (content.mediaUrls != null && content.mediaUrls!.isNotEmpty) {
-        for (String url in content.mediaUrls!) {
-          try {
-            Reference ref = _storage.refFromURL(url);
-            await ref.delete();
-          } catch (e) {
-            print('Medya dosyası silinirken hata oluştu: ${e.toString()}');
-            // İşlem devam etsin
-          }
-        }
-      }
-
-      // İçeriği sil
-      await _firestoreService.deleteContent(contentId);
-
-      // İlgili içerikleri güncelle
-      if (_currentContent != null && _currentContent!.id == contentId) {
-        _currentContent = null;
-        _comments = [];
-
-        notifyListeners();
-      }
-
-      return true;
-    } catch (e) {
-      _errorMessage = 'İçerik silinirken hata oluştu: ${e.toString()}';
-      print(_errorMessage);
-      return false;
-    } finally {
-      _setSubmitting(false);
-    }
-  }
-
-  // Kategori bazında içerikleri getir
-  Future<List<ContentModel>> getContentsByCategory(
-      String category, {
-        String? language,
-        int limit = 20,
-      }) async {
-    try {
-      _setLoading(true);
-
-      List<ContentModel> contents = await _firestoreService.getContentsByCategory(
-        category,
+      DocumentReference docRef = await FirebaseFirestore.instance.collection('contents').add(newContent);
+      final contentModel = ContentModel(
+        id: docRef.id,
+        title: title,
+        description: description,
+        category: category,
         language: language,
-        limit: limit,
+        imageUrl: imageUrl,
+        userId: userId,
+        authorName: authorName,
+        isFeatured: isFeatured,
+        viewCount: 0,
+        likeCount: 0,
+        commentCount: 0,
+        createdAt: DateTime.now(),
       );
 
-      _setLoading(false);
-      return contents;
+      _contents.insert(0, contentModel);
+      if (isFeatured) {
+        _featuredContents.insert(0, contentModel);
+      }
+      _errorMessage = null;
+      notifyListeners();
+      return true;
     } catch (e) {
-      _errorMessage = 'İçerikler yüklenirken hata oluştu: ${e.toString()}';
+      _errorMessage = 'İçerik eklenirken hata oluştu: $e';
       print(_errorMessage);
+      return false;
+    } finally {
       _setLoading(false);
-      return [];
     }
   }
 
-  // Öne çıkan içerikleri getir
-  Future<List<ContentModel>> getFeaturedContents({
-    String? language,
-    int limit = 10,
+  // İçerik günceller
+  Future<bool> updateContent({
+    required String contentId,
+    required String title,
+    required String description,
+    required String category,
+    required String language,
+    File? imageFile,
+    bool? isFeatured,
   }) async {
     try {
       _setLoading(true);
+      final existingContentIndex = _contents.indexWhere((c) => c.id == contentId);
+      if (existingContentIndex == -1) {
+        _errorMessage = 'Düzenlenecek içerik bulunamadı.';
+        return false;
+      }
 
-      List<ContentModel> contents = await _firestoreService.getFeaturedContents(
+      final existingContent = _contents[existingContentIndex];
+      final updates = <String, dynamic>{
+        'title': title,
+        'description': description,
+        'category': category,
+        'language': language,
+      };
+
+      String? imageUrl = existingContent.imageUrl;
+      if (imageFile != null) {
+        String fileName = 'content_images/${DateTime.now().millisecondsSinceEpoch}_${imageFile.path.split('/').last}';
+        Reference ref = _storage.ref().child(fileName);
+        await ref.putFile(imageFile);
+        imageUrl = await ref.getDownloadURL();
+        updates['imageUrl'] = imageUrl;
+      }
+
+      if (isFeatured != null) {
+        updates['isFeatured'] = isFeatured;
+      }
+
+      await FirebaseFirestore.instance.collection('contents').doc(contentId).update(updates);
+      final updatedContent = existingContent.copyWith(
+        title: title,
+        description: description,
+        category: category,
         language: language,
-        limit: limit,
+        imageUrl: imageUrl,
+        isFeatured: isFeatured ?? existingContent.isFeatured,
       );
 
-      _setLoading(false);
-      return contents;
+      _contents[existingContentIndex] = updatedContent;
+      int featuredIndex = _featuredContents.indexWhere((c) => c.id == contentId);
+      if (featuredIndex != -1) {
+        if (isFeatured == false) {
+          _featuredContents.removeAt(featuredIndex);
+        } else {
+          _featuredContents[featuredIndex] = updatedContent;
+        }
+      } else if (isFeatured == true) {
+        _featuredContents.add(updatedContent);
+      }
+
+      if (_selectedContent?.id == contentId) {
+        _selectedContent = updatedContent;
+      }
+      _errorMessage = null;
+      notifyListeners();
+      return true;
     } catch (e) {
-      _errorMessage = 'Öne çıkan içerikler yüklenirken hata oluştu: ${e.toString()}';
+      _errorMessage = 'İçerik güncellenirken hata oluştu: $e';
       print(_errorMessage);
+      return false;
+    } finally {
       _setLoading(false);
-      return [];
     }
   }
 
-  // Loading durumunu ayarla
-  void _setLoading(bool value) {
-    _isLoading = value;
+  // İçerik siler
+  Future<bool> deleteContent(String contentId) async {
+    try {
+      _setLoading(true);
+      await FirebaseFirestore.instance.collection('contents').doc(contentId).delete();
+      _contents.removeWhere((content) => content.id == contentId);
+      _featuredContents.removeWhere((content) => content.id == contentId);
+      if (_selectedContent?.id == contentId) {
+        _selectedContent = null;
+      }
+      _errorMessage = null;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = 'İçerik silinirken hata oluştu: $e';
+      print(_errorMessage);
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  // Yorum ekler
+  Future<bool> addComment({
+    required String contentId,
+    required String userId,
+    required String userName,
+    required String text,
+  }) async {
+    try {
+      _setLoading(true);
+      final newComment = {
+        'userId': userId,
+        'userName': userName,
+        'text': text,
+        'createdAt': FieldValue.serverTimestamp(),
+      };
+      DocumentReference commentRef = await FirebaseFirestore.instance
+          .collection('contents')
+          .doc(contentId)
+          .collection('comments')
+          .add(newComment);
+      await FirebaseFirestore.instance.collection('contents').doc(contentId).update({
+        'commentCount': FieldValue.increment(1),
+      });
+      final commentModel = CommentModel(
+        id: commentRef.id,
+        userId: userId,
+        userName: userName,
+        text: text,
+        createdAt: DateTime.now(),
+      );
+      _comments.insert(0, commentModel);
+      int index = _contents.indexWhere((content) => content.id == contentId);
+      if (index != -1) {
+        _contents[index] = _contents[index].copyWith(
+          commentCount: _contents[index].commentCount + 1,
+        );
+      }
+      int featuredIndex = _featuredContents.indexWhere((content) => content.id == contentId);
+      if (featuredIndex != -1) {
+        _featuredContents[featuredIndex] = _featuredContents[featuredIndex].copyWith(
+          commentCount: _featuredContents[featuredIndex].commentCount + 1,
+        );
+      }
+      if (_selectedContent?.id == contentId) {
+        _selectedContent = _selectedContent!.copyWith(
+          commentCount: _selectedContent!.commentCount + 1,
+        );
+      }
+      _errorMessage = null;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = 'Yorum eklenirken hata oluştu: $e';
+      print(_errorMessage);
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  // Beğenme durumunu değiştirir
+  Future<bool> toggleLike(String contentId, String userId) async {
+    try {
+      DocumentSnapshot userLikeDoc = await FirebaseFirestore.instance
+          .collection('contents')
+          .doc(contentId)
+          .collection('likes')
+          .doc(userId)
+          .get();
+      bool isLiked = userLikeDoc.exists;
+      int likeChange = isLiked ? -1 : 1;
+      if (isLiked) {
+        await FirebaseFirestore.instance
+            .collection('contents')
+            .doc(contentId)
+            .collection('likes')
+            .doc(userId)
+            .delete();
+        _isLiked = false;
+      } else {
+        await FirebaseFirestore.instance
+            .collection('contents')
+            .doc(contentId)
+            .collection('likes')
+            .doc(userId)
+            .set({'createdAt': FieldValue.serverTimestamp()});
+        _isLiked = true;
+      }
+      await FirebaseFirestore.instance.collection('contents').doc(contentId).update({
+        'likeCount': FieldValue.increment(likeChange),
+      });
+      _updateLikeStatus(contentId, likeChange);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      print('Beğeni işlemi sırasında hata oluştu: $e');
+      return false;
+    }
+  }
+
+  // Beğeni durumunu yerel olarak günceller
+  void _updateLikeStatus(String contentId, int likeChange) {
+    int index = _contents.indexWhere((content) => content.id == contentId);
+    if (index != -1) {
+      _contents[index] = _contents[index].copyWith(
+        likeCount: _contents[index].likeCount + likeChange,
+      );
+    }
+    int featuredIndex = _featuredContents.indexWhere((content) => content.id == contentId);
+    if (featuredIndex != -1) {
+      _featuredContents[featuredIndex] = _featuredContents[featuredIndex].copyWith(
+        likeCount: _featuredContents[featuredIndex].likeCount + likeChange,
+      );
+    }
+    if (_selectedContent?.id == contentId) {
+      _selectedContent = _selectedContent!.copyWith(
+        likeCount: _selectedContent!.likeCount + likeChange,
+      );
+    }
+  }
+
+  // Yükleme durumunu ayarlar
+  void _setLoading(bool isLoading) {
+    _isLoading = isLoading;
     notifyListeners();
   }
 
-  // Submitting durumunu ayarla
-  void _setSubmitting(bool value) {
-    _isSubmitting = value;
-    notifyListeners();
-  }
-
-  // Hata mesajını temizle
+  // Hata mesajını temizler
   void clearError() {
     _errorMessage = null;
     notifyListeners();

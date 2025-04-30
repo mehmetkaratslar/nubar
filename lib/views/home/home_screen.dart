@@ -1,17 +1,21 @@
+// Dosya: lib/views/home/home_screen.dart
+// Amaç: Ana sayfa, kategorileri ve içerikleri listeler.
+// Bağlantı: splash_screen.dart’tan yönlendirilir, category_screen.dart, profile_screen.dart, search_screen.dart’a bağlantı verir.
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../viewmodels/auth_viewmodel.dart';
 import '../../viewmodels/home_viewmodel.dart';
-import '../../utils/theme.dart';
-import '../../utils/constants.dart';
 import '../../models/content_model.dart';
 import '../auth/login_screen.dart';
-import '../content/content_detail_screen.dart';
 import '../profile/profile_screen.dart';
-import '../search/search_screen.dart';
+
+import '../editor/editor_dashboard.dart';
+import '../../utils/app_constants.dart';
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({Key? key}) : super(key: key);
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
@@ -22,7 +26,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // İçerikleri yükle
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final homeViewModel = Provider.of<HomeViewModel>(context, listen: false);
       homeViewModel.loadHomePageData();
@@ -35,32 +38,21 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'NÛBAR',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.search),
+            icon: const Icon(Icons.search),
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => SearchScreen()),
-              );
+              Navigator.pushNamed(context, '/search');
             },
           ),
           IconButton(
-            icon: Icon(Icons.notifications_outlined),
+            icon: const Icon(Icons.notifications_outlined),
             onPressed: () {
-              // Bildirimler
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Bildirim özelliği yakında eklenecektir.'),
-                  duration: Duration(seconds: 2),
-                ),
-              );
+              // Bildirimler (gelecekte eklenecek)
             },
           ),
         ],
@@ -68,14 +60,14 @@ class _HomeScreenState extends State<HomeScreen> {
       body: _buildSelectedTab(),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        selectedItemColor: AppTheme.primaryRed,
-        unselectedItemColor: AppTheme.darkGrey,
+        selectedItemColor: AppConstants.primaryRed,
+        unselectedItemColor: AppConstants.darkGray,
         onTap: (index) {
           setState(() {
             _currentIndex = index;
           });
         },
-        items: [
+        items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'Ana Sayfa',
@@ -100,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             DrawerHeader(
               decoration: BoxDecoration(
-                color: AppTheme.primaryRed,
+                color: AppConstants.primaryRed,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -108,32 +100,32 @@ class _HomeScreenState extends State<HomeScreen> {
                   CircleAvatar(
                     radius: 36,
                     backgroundColor: Colors.white,
-                    backgroundImage: authViewModel.user?.photoUrl != null
-                        ? CachedNetworkImageProvider(authViewModel.user!.photoUrl!)
+                    backgroundImage: authViewModel.userData?['photoUrl'] != null
+                        ? CachedNetworkImageProvider(authViewModel.userData!['photoUrl'])
                         : null,
-                    child: authViewModel.user?.photoUrl == null
+                    child: authViewModel.userData?['photoUrl'] == null
                         ? Text(
-                      authViewModel.user?.displayName.substring(0, 1) ?? 'N',
+                      authViewModel.userData?['displayName']?.substring(0, 1) ?? 'N',
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
-                        color: AppTheme.primaryRed,
+                        color: AppConstants.primaryRed,
                       ),
                     )
                         : null,
                   ),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
                   Text(
-                    authViewModel.user?.displayName ?? 'Kullanıcı',
-                    style: TextStyle(
+                    authViewModel.userData?['displayName'] ?? 'Kullanıcı',
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   Text(
-                    authViewModel.user?.email ?? '',
-                    style: TextStyle(
+                    authViewModel.userData?['email'] ?? '',
+                    style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 14,
                     ),
@@ -142,79 +134,37 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             ListTile(
-              leading: Icon(Icons.language),
-              title: Text('Dil Değiştir'),
+              leading: const Icon(Icons.language),
+              title: const Text('Dil Değiştir'),
               onTap: () {
-                // Dil değiştirme ekranı
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Dil değiştirme özelliği yakında eklenecektir.'),
-                    duration: Duration(seconds: 2),
-                  ),
-                );
+                Navigator.pushNamed(context, '/language_selection');
               },
             ),
             ListTile(
-              leading: Icon(Icons.settings),
-              title: Text('Ayarlar'),
+              leading: const Icon(Icons.settings),
+              title: const Text('Ayarlar'),
               onTap: () {
-                // Ayarlar ekranı
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Ayarlar özelliği yakında eklenecektir.'),
-                    duration: Duration(seconds: 2),
-                  ),
-                );
+                // Ayarlar ekranı (gelecekte eklenecek)
               },
             ),
             ListTile(
-              leading: Icon(Icons.info),
-              title: Text('Hakkında'),
+              leading: const Icon(Icons.info),
+              title: const Text('Hakkında'),
               onTap: () {
-                // Hakkında ekranı
                 Navigator.pop(context);
-                showAboutDialog(
-                  context: context,
-                  applicationName: 'NÛBAR',
-                  applicationVersion: '1.0.0',
-                  applicationIcon: Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryRed,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Center(
-                      child: Text(
-                        'N',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                  children: [
-                    SizedBox(height: 24),
-                    Text(
-                      'NÛBAR, Kürt kültürünü korumak, yaşatmak ve tanıtmak amacıyla geliştirilmiş bir platformdur. Kültürel bilinçlendirmeyi önceleyerek, Kürt gençlerini bilinçlendirmekle birlikte, farklı kültürlerden insanların da bilgi edinmesini ve etkileşim kurmasını sağlar.',
-                      style: TextStyle(fontSize: 14),
-                    ),
-                  ],
-                );
+                // Hakkında ekranı (gelecekte eklenecek)
               },
             ),
-            Divider(),
+            const Divider(),
             ListTile(
-              leading: Icon(Icons.exit_to_app),
-              title: Text('Çıkış Yap'),
+              leading: const Icon(Icons.exit_to_app),
+              title: const Text('Çıkış Yap'),
               onTap: () async {
                 await authViewModel.logout();
                 Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => LoginScreen()),
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
                       (route) => false,
                 );
               },
@@ -222,6 +172,14 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
+      floatingActionButton: authViewModel.isEditor
+          ? FloatingActionButton(
+        onPressed: () {
+          Navigator.pushNamed(context, '/editor_dashboard');
+        },
+        child: const Icon(Icons.edit),
+      )
+          : null,
     );
   }
 
@@ -234,7 +192,7 @@ class _HomeScreenState extends State<HomeScreen> {
       case 2:
         return _buildSavedTab();
       case 3:
-        return ProfileScreen();
+        return const ProfileScreen();
       default:
         return _buildHomeTab();
     }
@@ -244,7 +202,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final homeViewModel = Provider.of<HomeViewModel>(context);
 
     if (homeViewModel.isLoading) {
-      return Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (homeViewModel.errorMessage != null) {
@@ -253,10 +211,10 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(homeViewModel.errorMessage!),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () => homeViewModel.loadHomePageData(),
-              child: Text('Tekrar Dene'),
+              child: const Text('Tekrar Dene'),
             ),
           ],
         ),
@@ -266,40 +224,38 @@ class _HomeScreenState extends State<HomeScreen> {
     return RefreshIndicator(
       onRefresh: () => homeViewModel.loadHomePageData(),
       child: SingleChildScrollView(
-        physics: AlwaysScrollableScrollPhysics(),
-        padding: EdgeInsets.all(16),
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Kategoriler
             Container(
               height: 50,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                itemCount: AppConstants.categories.length,
+                itemCount: homeViewModel.categories.length,
                 itemBuilder: (context, index) {
-                  final category = AppConstants.categories[index];
+                  final category = homeViewModel.categories[index];
                   final isSelected = category == homeViewModel.selectedCategory;
-
                   return GestureDetector(
                     onTap: () {
                       homeViewModel.setCategory(category);
                     },
                     child: Container(
-                      margin: EdgeInsets.only(right: 10),
-                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      margin: const EdgeInsets.only(right: 10),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       decoration: BoxDecoration(
-                        color: isSelected ? AppTheme.primaryRed : AppTheme.lightGrey,
+                        color: isSelected ? AppConstants.primaryRed : AppConstants.lightGray,
                         borderRadius: BorderRadius.circular(25),
                         border: Border.all(
-                          color: isSelected ? AppTheme.primaryRed : Colors.grey[300]!,
+                          color: isSelected ? AppConstants.primaryRed : Colors.grey[300]!,
                         ),
                       ),
                       child: Center(
                         child: Text(
                           category,
                           style: TextStyle(
-                            color: isSelected ? Colors.white : AppTheme.darkGrey,
+                            color: isSelected ? Colors.white : AppConstants.darkGray,
                             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                           ),
                         ),
@@ -309,19 +265,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
             ),
-
-            SizedBox(height: 24),
-
-            // Öne Çıkan İçerikler
+            const SizedBox(height: 24),
             if (homeViewModel.featuredContents.isNotEmpty) ...[
-              Text(
+              const Text(
                 'Öne Çıkan İçerikler',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               Container(
                 height: 200,
                 child: ListView.builder(
@@ -333,37 +286,30 @@ class _HomeScreenState extends State<HomeScreen> {
                   },
                 ),
               ),
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
             ],
-
-            // Son Eklenen İçerikler
-            Text(
+            const Text(
               'Son Eklenenler',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 16),
-
-            if (homeViewModel.filteredContents.isEmpty) ...[
-              Center(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 32),
-                  child: Text('Bu kategoride henüz içerik bulunmamaktadır.'),
-                ),
-              ),
-            ] else ...[
+            const SizedBox(height: 16),
+            if (homeViewModel.filteredContents.isEmpty)
+              const Center(
+                child: Text('Bu kategoride henüz içerik bulunmamaktadır.'),
+              )
+            else
               ListView.builder(
                 shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
+                physics: const NeverScrollableScrollPhysics(),
                 itemCount: homeViewModel.filteredContents.length,
                 itemBuilder: (context, index) {
                   final content = homeViewModel.filteredContents[index];
                   return _buildContentListItem(content);
                 },
               ),
-            ],
           ],
         ),
       ),
@@ -371,60 +317,29 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildExploreTab() {
-    // Keşfet sekmesi içeriği (kategoriler ve popüler içerikler)
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.explore,
-            size: 80,
-            color: Colors.grey[300],
-          ),
-          SizedBox(height: 16),
-          Text(
-            "Keşfet özelliği yakında eklenecektir.",
-            style: TextStyle(fontSize: 16),
-          ),
-        ],
-      ),
+    return const Center(
+      child: Text('Keşfet - Bu özellik yakında - Bu özellik yakında eklenecek.'),
     );
   }
 
   Widget _buildSavedTab() {
-    // Kaydedilenler sekmesi içeriği
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.bookmark,
-            size: 80,
-            color: Colors.grey[300],
-          ),
-          SizedBox(height: 16),
-          Text(
-            "Kaydedilenler özelliği yakında eklenecektir.",
-            style: TextStyle(fontSize: 16),
-          ),
-        ],
-      ),
+    return const Center(
+      child: Text('Kaydedilenler - Bu özellik yakında eklenecek.'),
     );
   }
 
   Widget _buildFeaturedContentCard(ContentModel content) {
     return GestureDetector(
       onTap: () {
-        Navigator.push(
+        Navigator.pushNamed(
           context,
-          MaterialPageRoute(
-            builder: (_) => ContentDetailScreen(contentId: content.id),
-          ),
+          '/content_detail',
+          arguments: content.id,
         );
       },
       child: Container(
         width: 280,
-        margin: EdgeInsets.only(right: 16),
+        margin: const EdgeInsets.only(right: 16),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
@@ -432,16 +347,15 @@ class _HomeScreenState extends State<HomeScreen> {
             BoxShadow(
               color: Colors.black.withOpacity(0.1),
               blurRadius: 10,
-              offset: Offset(0, 4),
+              offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // İçerik Görseli
             ClipRRect(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
               child: content.imageUrl != null
                   ? CachedNetworkImage(
                 imageUrl: content.imageUrl!,
@@ -451,12 +365,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 placeholder: (context, url) => Container(
                   height: 120,
                   color: Colors.grey[300],
-                  child: Center(child: CircularProgressIndicator()),
+                  child: const Center(child: CircularProgressIndicator()),
                 ),
                 errorWidget: (context, url, error) => Container(
                   height: 120,
                   color: Colors.grey[300],
-                  child: Icon(Icons.error),
+                  child: const Icon(Icons.error),
                 ),
               )
                   : Container(
@@ -471,33 +385,29 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-
-            // İçerik Bilgileri
             Padding(
-              padding: EdgeInsets.all(12),
+              padding: const EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Kategori etiketi
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppTheme.lightGrey,
+                      color: AppConstants.lightGray,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
                       content.category,
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppTheme.darkGrey,
+                        color: AppConstants.darkGray,
                       ),
                     ),
                   ),
-                  SizedBox(height: 8),
-                  // Başlık
+                  const SizedBox(height: 8),
                   Text(
                     content.title,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
@@ -516,15 +426,14 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildContentListItem(ContentModel content) {
     return GestureDetector(
       onTap: () {
-        Navigator.push(
+        Navigator.pushNamed(
           context,
-          MaterialPageRoute(
-            builder: (_) => ContentDetailScreen(contentId: content.id),
-          ),
+          '/content_detail',
+          arguments: content.id,
         );
       },
       child: Container(
-        margin: EdgeInsets.only(bottom: 16),
+        margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
@@ -532,16 +441,15 @@ class _HomeScreenState extends State<HomeScreen> {
             BoxShadow(
               color: Colors.black.withOpacity(0.05),
               blurRadius: 5,
-              offset: Offset(0, 2),
+              offset: const Offset(0, 2),
             ),
           ],
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // İçerik Görseli
             ClipRRect(
-              borderRadius: BorderRadius.horizontal(left: Radius.circular(12)),
+              borderRadius: const BorderRadius.horizontal(left: Radius.circular(12)),
               child: content.imageUrl != null
                   ? CachedNetworkImage(
                 imageUrl: content.imageUrl!,
@@ -552,13 +460,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   height: 100,
                   width: 100,
                   color: Colors.grey[300],
-                  child: Center(child: CircularProgressIndicator()),
+                  child: const Center(child: CircularProgressIndicator()),
                 ),
                 errorWidget: (context, url, error) => Container(
                   height: 100,
                   width: 100,
                   color: Colors.grey[300],
-                  child: Icon(Icons.error),
+                  child: const Icon(Icons.error),
                 ),
               )
                   : Container(
@@ -574,42 +482,37 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-
-            // İçerik Bilgileri
             Expanded(
               child: Padding(
-                padding: EdgeInsets.all(12),
+                padding: const EdgeInsets.all(12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Kategori etiketi
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: AppTheme.lightGrey,
+                        color: AppConstants.lightGray,
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
                         content.category,
                         style: TextStyle(
                           fontSize: 12,
-                          color: AppTheme.darkGrey,
+                          color: AppConstants.darkGray,
                         ),
                       ),
                     ),
-                    SizedBox(height: 8),
-                    // Başlık
+                    const SizedBox(height: 8),
                     Text(
                       content.title,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    SizedBox(height: 4),
-                    // Yazar ve tarih
+                    const SizedBox(height: 4),
                     Row(
                       children: [
                         Icon(
@@ -617,7 +520,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           size: 14,
                           color: Colors.grey[600],
                         ),
-                        SizedBox(width: 4),
+                        const SizedBox(width: 4),
                         Text(
                           content.authorName,
                           style: TextStyle(
@@ -625,13 +528,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             color: Colors.grey[600],
                           ),
                         ),
-                        SizedBox(width: 12),
+                        const SizedBox(width: 12),
                         Icon(
                           Icons.access_time,
                           size: 14,
                           color: Colors.grey[600],
                         ),
-                        SizedBox(width: 4),
+                        const SizedBox(width: 4),
                         Text(
                           _formatDate(content.createdAt),
                           style: TextStyle(
@@ -651,8 +554,9 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  String _formatDate(timestamp) {
-    final date = timestamp.toDate();
+  String _formatDate(DateTime? timestamp) {
+    if (timestamp == null) return 'Bilinmiyor';
+    final date = timestamp;
     final now = DateTime.now();
     final difference = now.difference(date);
 

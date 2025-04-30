@@ -1,105 +1,69 @@
-// lib/views/home/category_screen.dart
-// Amaç: Kullanıcıların içerik kategorilerini görüntülediği ekran.
-// Konum: lib/views/home/
-// Bağlantı: HomeScreen'den gelir, ContentListScreen'e yönlendirir.
-
+// Dosya: lib/views/home/category_screen.dart
+// Amaç: Kategorileri listeleyen ekran, kullanıcıların içerik kategorilerine göz atmasını sağlar.
+// Bağlantı: home_screen.dart’tan çağrılır, content_detail_screen.dart’a yönlendirme yapabilir.
 import 'package:flutter/material.dart';
-import 'package:nubar/utils/constants.dart';
-import 'package:nubar/views/content/content_list_screen.dart';
+import 'package:provider/provider.dart';
+import '../../viewmodels/content_viewmodel.dart';
+import '../../models/content_model.dart';
+import '../../utils/app_constants.dart';
+import '../content/content_detail_screen.dart';
 
-class CategoryScreen extends StatelessWidget {
-  const CategoryScreen({super.key});
+class CategoryScreen extends StatefulWidget {
+  final String category;
+
+  const CategoryScreen({Key? key, required this.category}) : super(key: key);
+
+  @override
+  _CategoryScreenState createState() => _CategoryScreenState();
+}
+
+class _CategoryScreenState extends State<CategoryScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final contentViewModel = Provider.of<ContentViewModel>(context, listen: false);
+      contentViewModel.getContentsByCategory(widget.category);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final categories = [
-      {'title': 'Tarih', 'icon': Constants.categoryIcons['history']},
-      {'title': 'Dil', 'icon': Constants.categoryIcons['language']},
-      {'title': 'Sanat', 'icon': Constants.categoryIcons['art']},
-      {'title': 'Müzik', 'icon': Constants.categoryIcons['music']},
-      {'title': 'Gelenekler', 'icon': Constants.categoryIcons['traditions']},
-    ];
+    final contentViewModel = Provider.of<ContentViewModel>(context);
 
     return Scaffold(
+      backgroundColor: AppConstants.backgroundColor,
       appBar: AppBar(
-        backgroundColor: Constants.primaryColor,
-        title: const Text(
-          'Kategoriler',
-          style: TextStyle(color: Colors.white),
-        ),
+        title: Text(widget.category),
+        backgroundColor: AppConstants.primaryRed,
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Constants.backgroundColor,
-              Constants.lightGray,
-            ],
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(Constants.spacingMedium),
-          child: GridView.builder(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: Constants.spacingMedium,
-              mainAxisSpacing: Constants.spacingMedium,
-              childAspectRatio: 1.0,
+      body: contentViewModel.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView.builder(
+        padding: const EdgeInsets.all(AppConstants.spacingMedium),
+        itemCount: contentViewModel.contents.length,
+        itemBuilder: (context, index) {
+          final content = contentViewModel.contents[index];
+          return Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppConstants.cardBorderRadius),
             ),
-            itemCount: categories.length,
-            itemBuilder: (context, index) {
-              final category = categories[index];
-              return GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const ContentListScreen()),
-                  );
-                },
-                child: Card(
-                  elevation: 5,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(Constants.cardBorderRadius),
-                  ),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(Constants.cardBorderRadius),
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Constants.primaryColor.withOpacity(0.8),
-                          Constants.secondaryColor.withOpacity(0.8),
-                        ],
-                      ),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          category['icon'] as IconData,
-                          size: 40,
-                          color: Colors.white,
-                        ),
-                        const SizedBox(height: Constants.spacingSmall),
-                        Text(
-                          category['title'] as String,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: Constants.textLarge,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
+            child: ListTile(
+              leading: Icon(AppConstants.categoryIcons[content.category] ?? Icons.category),
+              title: Text(
+                content.title,
+                style: const TextStyle(fontSize: AppConstants.textLarge),
+              ),
+              onTap: () {
+                Navigator.pushNamed(
+                  context,
+                  '/content_detail',
+                  arguments: content.id,
+                );
+              },
+            ),
+          );
+        },
       ),
     );
   }

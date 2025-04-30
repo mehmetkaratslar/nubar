@@ -1,12 +1,15 @@
+// Dosya: lib/views/splash/language_selection_screen.dart
+// Amaç: Kullanıcının dil seçimi yaptığı ekran.
+// Bağlantı: splash_screen.dart’tan çağrılır, login_screen.dart’a yönlendirir.
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../utils/theme.dart';
 import '../../viewmodels/auth_viewmodel.dart';
-import '../auth/login_screen.dart';
 
 class LanguageSelectionScreen extends StatelessWidget {
-  final List<Map<String, dynamic>> languages = [
+  const LanguageSelectionScreen({Key? key}) : super(key: key);
+
+  final List<Map<String, dynamic>> languages = const [
     {
       'name': 'Kurdî (Kurmancî)',
       'code': 'ku',
@@ -25,19 +28,17 @@ class LanguageSelectionScreen extends StatelessWidget {
   ];
 
   Future<void> _selectLanguage(BuildContext context, String languageCode) async {
-    // AuthViewModel'e dil seçimini kaydet
-    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
-    await authViewModel.updateUserLanguage(languageCode);
-
-    // Seçilen dili SharedPreferences'a kaydet
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('selectedLanguage', languageCode);
-    await prefs.setBool('hasSelectedLanguage', true);
-
-    // Daha sonra giriş ekranına yönlendir
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => LoginScreen()),
-    );
+    try {
+      final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('selectedLanguage', languageCode);
+      await prefs.setBool('hasSelectedLanguage', true);
+      await authViewModel.updateUserLanguage(languageCode);
+      print("LanguageSelectionScreen: Dil seçildi: $languageCode, login ekranına yönlendiriliyor.");
+      Navigator.of(context).pushReplacementNamed('/login');
+    } catch (e) {
+      print("LanguageSelectionScreen: Dil seçimi hatası: $e");
+    }
   }
 
   @override
@@ -49,17 +50,16 @@ class LanguageSelectionScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              SizedBox(height: 40),
-              // Logo veya Başlık
+              const SizedBox(height: 40),
               Center(
                 child: Container(
                   width: 100,
                   height: 100,
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryRed,
+                    color: Theme.of(context).primaryColor,
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: Center(
+                  child: const Center(
                     child: Text(
                       'NÛBAR',
                       style: TextStyle(
@@ -71,9 +71,8 @@ class LanguageSelectionScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(height: 48),
-              // Dil seçimi başlığı
-              Text(
+              const SizedBox(height: 48),
+              const Text(
                 'Zimanê xwe hilbijêre / Dilinizi seçin / Select your language',
                 textAlign: TextAlign.center,
                 style: TextStyle(
@@ -81,8 +80,7 @@ class LanguageSelectionScreen extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 32),
-              // Dil seçenekleri
+              const SizedBox(height: 32),
               Expanded(
                 child: ListView.builder(
                   itemCount: languages.length,
@@ -93,9 +91,9 @@ class LanguageSelectionScreen extends StatelessWidget {
                       child: InkWell(
                         onTap: () => _selectLanguage(context, language['code']),
                         child: Container(
-                          padding: EdgeInsets.symmetric(vertical: 16),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
                           decoration: BoxDecoration(
-                            color: AppTheme.lightGrey,
+                            color: Colors.grey[200],
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: Colors.grey.shade300),
                           ),
@@ -104,12 +102,12 @@ class LanguageSelectionScreen extends StatelessWidget {
                             children: [
                               Text(
                                 language['flag'],
-                                style: TextStyle(fontSize: 24),
+                                style: const TextStyle(fontSize: 24),
                               ),
-                              SizedBox(width: 12),
+                              const SizedBox(width: 12),
                               Text(
                                 language['name'],
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w500,
                                 ),

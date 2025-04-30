@@ -19,67 +19,64 @@ dependencies:
     sdk: flutter
 
   # Firebase paketleri - Backend hizmetleri için
-  firebase_core: ^3.0.0          # Firebase temel paket
-  firebase_auth: ^5.0.0          # Kimlik doğrulama için
-  cloud_firestore: ^5.0.0        # Veritabanı için
-  firebase_storage: ^12.0.0      # Medya depolama için
-  firebase_analytics: ^11.0.0    # Kullanım analizi için
-  firebase_dynamic_links: ^6.0.5 # Derin bağlantılar için (güncellendi)
+  firebase_core: ^3.0.0
+  firebase_auth: ^5.0.0
+  cloud_firestore: ^5.0.0
+  firebase_storage: ^12.0.0
+  firebase_analytics: ^11.0.0
+  # firebase_dynamic_links kaldırıldı çünkü kullanımdan kalkmış
 
   # Google ile giriş
-  google_sign_in: ^6.2.1         # Google Sign-In için
+  google_sign_in: ^6.2.1
 
   # Durum yönetimi
+  provider: ^6.0.5
 
   # Görsel ve UI paketleri
-  cupertino_icons: ^1.0.8        # iOS stil ikonlar
-  cached_network_image: ^3.3.1   # Önbellekli görsel yükleme
-  flutter_svg: ^2.0.10           # SVG dosyaları için
-  shimmer: ^3.0.0                # Yükleme animasyonları
+  cupertino_icons: ^1.0.8
+  cached_network_image: ^3.3.1
+  flutter_svg: ^2.0.10
+  shimmer: ^3.0.0
 
   # Yerelleştirme ve çoklu dil
-  intl: ^0.19.0                  # Dil ve format desteği
+  intl: ^0.19.0
 
   # Medya işleme
-  image_picker: ^1.1.2           # Kamera/galeri erişimi
-  video_player: ^2.9.1           # Video oynatma
-  chewie: ^1.7.1                 # Video kontrolleri
+  image_picker: ^1.1.2
+  video_player: ^2.9.1
+  chewie: ^1.7.1
 
   # Sosyal medya paylaşımı
-  share_plus: ^9.0.0             # İçerik paylaşımı
-  url_launcher: ^6.3.0           # Bağlantı açma
+  share_plus: ^9.0.0
+  url_launcher: ^6.3.0
 
   # Çevrimdışı depolama ve önbellekleme
-  shared_preferences: ^2.2.3     # Yerel depolama
-  sqflite: ^2.3.3                # SQL veritabanı
-  path_provider: ^2.1.3          # Dosya sistemi erişimi
+  shared_preferences: ^2.2.3
+  sqflite: ^2.3.3
+  path_provider: ^2.1.3
 
   # Form ve validasyon
-  form_field_validator: ^1.1.0   # Form validasyonu
-
-  # JavaScript interop (web desteği için)
-  js: ^0.6.7                     # Firebase web bağımlılıkları için
+  form_field_validator: ^1.1.0
 
   # Diğer
-  timeago: ^3.6.1                # Zaman formatlaması
-  connectivity_plus: ^6.0.3       # İnternet bağlantısı kontrolü
-  flutter_native_splash: ^2.4.1  # Açılış ekranı
-  package_info_plus: ^8.0.0      # Uygulama bilgileri
-  provider: 6.0.5
+  timeago: ^3.6.1
+  connectivity_plus: ^6.0.3
+  flutter_native_splash: ^2.4.1
+  package_info_plus: ^8.0.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^4.0.0          # Kod kalitesi kuralları
+  flutter_lints: ^4.0.0
 
 # Flutter yapılandırması
 flutter:
   uses-material-design: true
 
   assets:
-    - assets/images/           # Resimler
-    - assets/icons/            # İkonlar
-    - assets/animations/       # Animasyonlar
+    - assets/images/
+    - assets/icons/
+    - assets/animations/
 
   fonts:
     - family: NotoSans

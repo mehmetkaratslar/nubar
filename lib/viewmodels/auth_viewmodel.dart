@@ -1,340 +1,278 @@
-import 'package:flutter/material.dart';
+// Dosya: lib/viewmodels/auth_viewmodel.dart
+// Amaç: Kullanıcı kimlik doğrulama işlemlerini yönetir.
+// Bağlantı: login_screen.dart, register_screen.dart, language_selection_screen.dart ile çalışır.
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/user_model.dart';
 import '../services/auth_service.dart';
-import '../services/firestore_service.dart';
-import '../utils/constants.dart';
 
 class AuthViewModel with ChangeNotifier {
   final AuthService _authService;
-  final FirestoreService _firestoreService;
-  final SharedPreferences _preferences;
-
-  UserModel? _user;
+  final SharedPreferences _sharedPreferences;
+  bool _isAuthenticated = false;
   bool _isLoading = false;
   String? _errorMessage;
+  User? _user;
+  Map<String, dynamic>? _userData;
+  bool _isEditor = false;
 
-  AuthViewModel({
-    required AuthService authService,
-    required FirestoreService firestoreService,
-    required SharedPreferences sharedPreferences,
-  })  : _authService = authService,
-        _firestoreService = firestoreService,
-        _preferences = sharedPreferences {
-    // Oturum değişikliklerini dinle
-    _authService.authStateChanges.listen((user) {
-      if (user != null) {
-        _loadUserData(user.uid);
-      } else {
-        _user = null;
-        _saveUserDataToPrefs(null);
-        notifyListeners();
-      }
-    });
-
-    // Tercihlerden kullanıcı verilerini yüklemeyi dene
-    _loadUserDataFromPrefs();
+  AuthViewModel(this._authService, this._sharedPreferences) {
+    _initAuthListener();
   }
 
-  UserModel? get user => _user;
+  bool get isAuthenticated => _isAuthenticated;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
-  bool get isLoggedIn => _user != null;
-  bool get isEditor => _user?.role == Constants.roleEditor || _user?.role == Constants.roleAdmin;
+  User? get user => _user;
+  Map<String, dynamic>? get userData => _userData;
+  bool get isEditor => _isEditor;
 
-  // Tercihlerden kullanıcı verilerini yükle
-  void _loadUserDataFromPrefs() {
-    final userId = _preferences.getString(Constants.prefUserId);
-    if (userId != null) {
-      final email = _preferences.getString(Constants.prefUserEmail) ?? '';
-      final displayName = _preferences.getString(Constants.prefUserName) ?? '';
-      final role = _preferences.getString(Constants.prefUserRole) ?? Constants.roleUser;
-
-      _user = UserModel(
-        id: userId,
-        email: email,
-        displayName: displayName,
-        role: role,
-        preferredLanguage: Constants.languageTurkish,
-        createdAt: DateTime.now(),
-        lastLoginAt: DateTime.now(),
-        isActive: true,
-      );
-
-      notifyListeners();
-
-      // Firebase'den en güncel verileri al
-      if (_authService.currentUser != null) {
-        _loadUserData(_authService.currentUser!.uid);
-      }
-    }
-  }
-
-  // Tercihlere kullanıcı verilerini kaydet
-  void _saveUserDataToPrefs(UserModel? user) {
-    if (user != null) {
-      _preferences.setString(Constants.prefUserId, user.id);
-      _preferences.setString(Constants.prefUserEmail, user.email);
-      _preferences.setString(Constants.prefUserName, user.displayName);
-      _preferences.setString(Constants.prefUserRole, user.role);
-    } else {
-      _preferences.remove(Constants.prefUserId);
-      _preferences.remove(Constants.prefUserEmail);
-      _preferences.remove(Constants.prefUserName);
-      _preferences.remove(Constants.prefUserRole);
-    }
-  }
-
-  // Firestore'dan kullanıcı verilerini yükle
-  Future<void> _loadUserData(String userId) async {
+  // Authentication durumunu dinler
+  void _initAuthListener() {
     try {
-      _setLoading(true);
-
-      UserModel? userModel = await _firestoreService.getUser(userId);
-
-      if (userModel != null) {
-        _user = userModel;
-        _saveUserDataToPrefs(userModel);
-      } else {
-        // Kullanıcı Firestore'da yoksa, Firebase Auth'dan bilgileri al ve oluştur
-        User? firebaseUser = _authService.currentUser;
+      _authService.getFirebaseAuth().authStateChanges().listen((User? firebaseUser) async {
         if (firebaseUser != null) {
-          userModel = UserModel(
-            id: firebaseUser.uid,
-            email: firebaseUser.email ?? '',
-            displayName: firebaseUser.displayName ?? firebaseUser.email?.split('@')[0] ?? 'Kullanıcı',
-            photoUrl: firebaseUser.photoURL,
-            role: Constants.roleUser,
-            preferredLanguage: Constants.languageTurkish,
-            createdAt: DateTime.now(),
-            lastLoginAt: DateTime.now(),
-            isActive: true,
-          );
-
-          await _firestoreService.createUser(userModel);
-          _user = userModel;
-          _saveUserDataToPrefs(userModel);
+          print("AuthViewModel: Kullanıcı giriş yaptı, UID: ${firebaseUser.uid}");
+          await _fetchUserData(firebaseUser.uid);
+        } else {
+          print("AuthViewModel: Kullanıcı çıkış yaptı.");
+          _user = null;
+          _userData = null;
+          _isAuthenticated = false;
+          _isEditor = false;
+          notifyListeners();
         }
-      }
-
-      _errorMessage = null;
-      notifyListeners();
+      });
     } catch (e) {
-      _errorMessage = 'Kullanıcı verileri yüklenirken hata oluştu: ${e.toString()}';
-      print(_errorMessage);
-    } finally {
-      _setLoading(false);
+      print("AuthViewModel: Authentication dinleme hatası: $e");
     }
   }
 
-  // E-posta ve şifre ile kayıt ol
-  Future<bool> registerWithEmailPassword(
-      String email,
-      String password,
-      String displayName,
-      ) async {
+  // Firestore’dan kullanıcı verilerini çeker
+  Future<void> _fetchUserData(String uid) async {
     try {
       _setLoading(true);
+      DocumentSnapshot doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+
+      if (doc.exists) {
+        _userData = doc.data() as Map<String, dynamic>;
+        _user = _authService.getCurrentUser();
+        _isAuthenticated = true;
+        _isEditor = _userData?['role'] == 'editor';
+        print("AuthViewModel: Kullanıcı verileri alındı: ${_userData?['displayName']}");
+      } else {
+        final firebaseUser = _authService.getCurrentUser()!;
+        final userData = {
+          'displayName': firebaseUser.displayName ?? 'Kullanıcı',
+          'email': firebaseUser.email,
+          'photoUrl': firebaseUser.photoURL,
+          'role': 'user',
+          'createdAt': FieldValue.serverTimestamp(),
+        };
+        await FirebaseFirestore.instance.collection('users').doc(uid).set(userData);
+        _userData = userData;
+        _user = firebaseUser;
+        _isAuthenticated = true;
+        _isEditor = false;
+        print("AuthViewModel: Yeni kullanıcı verileri oluşturuldu: ${_userData?['displayName']}");
+      }
       _errorMessage = null;
-
-      // Firebase Auth ile kayıt ol
-      UserCredential credential = await _authService.registerWithEmailPassword(email, password);
-
-      // Kullanıcı adını güncelle
-      await _authService.updateDisplayName(displayName);
-
-      // Firestore'a kullanıcı verilerini kaydet
-      UserModel newUser = UserModel(
-        id: credential.user!.uid,
-        email: email,
-        displayName: displayName,
-        role: Constants.roleUser,
-        preferredLanguage: Constants.languageTurkish,
-        createdAt: DateTime.now(),
-        lastLoginAt: DateTime.now(),
-        isActive: true,
-      );
-
-      await _firestoreService.createUser(newUser);
-
-      // Yerel verileri güncelle
-      _user = newUser;
-      _saveUserDataToPrefs(newUser);
-
       notifyListeners();
-      return true;
-    } on FirebaseAuthException catch (e) {
-      _errorMessage = _authService.getErrorMessage(e);
-      print(_errorMessage);
-      return false;
     } catch (e) {
-      _errorMessage = 'Kayıt sırasında bir hata oluştu: ${e.toString()}';
-      print(_errorMessage);
-      return false;
+      _errorMessage = 'Kullanıcı bilgileri alınamadı: $e';
+      print("AuthViewModel: Kullanıcı verileri alınırken hata: $_errorMessage");
     } finally {
       _setLoading(false);
     }
   }
 
-  // E-posta ve şifre ile giriş yap
+  // E-posta ve şifre ile giriş yapar
   Future<bool> signInWithEmailPassword(String email, String password) async {
     try {
       _setLoading(true);
       _errorMessage = null;
 
-      await _authService.signInWithEmailPassword(email, password);
-
-      // _loadUserData işlemi dinleyici tarafından tetiklenecek
-      return true;
-    } on FirebaseAuthException catch (e) {
-      _errorMessage = _authService.getErrorMessage(e);
-      print(_errorMessage);
-      return false;
+      final user = await _authService.signInWithEmail(email, password);
+      if (user != null) {
+        await _fetchUserData(user.uid);
+        print("AuthViewModel: E-posta ile giriş başarılı: ${user.uid}");
+        return true;
+      } else {
+        _errorMessage = 'Giriş başarısız.';
+        print("AuthViewModel: E-posta ile giriş başarısız.");
+        return false;
+      }
     } catch (e) {
-      _errorMessage = 'Giriş sırasında bir hata oluştu: ${e.toString()}';
-      print(_errorMessage);
+      _handleAuthError(e);
+      print("AuthViewModel: E-posta ile giriş hatası: $e");
       return false;
     } finally {
       _setLoading(false);
     }
   }
 
-  // Google ile giriş yap
+  // Google ile giriş yapar
   Future<bool> signInWithGoogle() async {
     try {
       _setLoading(true);
       _errorMessage = null;
 
-      UserCredential? credential = await _authService.signInWithGoogle();
-
-      if (credential == null) {
-        // Kullanıcı işlemi iptal etti
-        _errorMessage = 'Google girişi iptal edildi';
+      final user = await _authService.signInWithGoogle();
+      if (user != null) {
+        await _fetchUserData(user.uid);
+        print("AuthViewModel: Google ile giriş başarılı: ${user.uid}");
+        return true;
+      } else {
+        _errorMessage = 'Google ile giriş başarısız.';
+        print("AuthViewModel: Google ile giriş başarısız.");
         return false;
       }
-
-      // _loadUserData işlemi dinleyici tarafından tetiklenecek
-      return true;
     } catch (e) {
-      _errorMessage = 'Google girişi sırasında bir hata oluştu: ${e.toString()}';
-      print(_errorMessage);
+      _handleAuthError(e);
+      print("AuthViewModel: Google ile giriş hatası: $e");
       return false;
     } finally {
       _setLoading(false);
     }
   }
 
-  // Şifre sıfırlama
-  Future<bool> sendPasswordResetEmail(String email) async {
+  // E-posta ve şifre ile kayıt yapar
+  Future<bool> registerWithEmailPassword(String email, String password, String displayName) async {
     try {
       _setLoading(true);
       _errorMessage = null;
 
-      await _authService.sendPasswordResetEmail(email);
-
-      return true;
-    } on FirebaseAuthException catch (e) {
-      _errorMessage = _authService.getErrorMessage(e);
-      print(_errorMessage);
-      return false;
+      final user = await _authService.register(email, password, displayName);
+      if (user != null) {
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+          'displayName': displayName,
+          'email': email,
+          'photoUrl': null,
+          'role': 'user',
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+        await _fetchUserData(user.uid);
+        print("AuthViewModel: Kayıt başarılı: ${user.uid}");
+        return true;
+      } else {
+        _errorMessage = 'Kayıt başarısız.';
+        print("AuthViewModel: Kayıt başarısız.");
+        return false;
+      }
     } catch (e) {
-      _errorMessage = 'Şifre sıfırlama sırasında bir hata oluştu: ${e.toString()}';
-      print(_errorMessage);
+      _handleAuthError(e);
+      print("AuthViewModel: Kayıt hatası: $e");
       return false;
     } finally {
       _setLoading(false);
     }
   }
 
-  // Çıkış yap
-  Future<void> signOut() async {
+  // Kullanıcı çıkışı
+  Future<void> logout() async {
     try {
-      _setLoading(true);
-
       await _authService.signOut();
-
       _user = null;
-      _saveUserDataToPrefs(null);
-      _errorMessage = null;
-
+      _userData = null;
+      _isAuthenticated = false;
+      _isEditor = false;
       notifyListeners();
+      print("AuthViewModel: Kullanıcı çıkış yaptı.");
     } catch (e) {
-      _errorMessage = 'Çıkış yapılırken bir hata oluştu: ${e.toString()}';
-      print(_errorMessage);
+      _errorMessage = 'Çıkış yapılırken hata oluştu: $e';
+      print("AuthViewModel: Çıkış hatası: $_errorMessage");
+    }
+  }
+
+  // Şifre sıfırlama e-postası gönderir
+  Future<bool> resetPassword(String email) async {
+    try {
+      _setLoading(true);
+      _errorMessage = null;
+      await _authService.getFirebaseAuth().sendPasswordResetEmail(email: email);
+      print("AuthViewModel: Şifre sıfırlama e-postası gönderildi: $email");
+      return true;
+    } catch (e) {
+      _handleAuthError(e);
+      print("AuthViewModel: Şifre sıfırlama hatası: $e");
+      return false;
     } finally {
       _setLoading(false);
     }
   }
 
-  // Kullanıcı bilgilerini güncelle
-  Future<bool> updateUserProfile({
-    String? displayName,
-    String? photoUrl,
-    String? bio,
-    String? preferredLanguage,
-  }) async {
+  // Profil bilgilerini günceller
+  Future<bool> updateProfile({String? displayName, String? photoUrl}) async {
     if (_user == null) return false;
 
     try {
       _setLoading(true);
-
-      Map<String, dynamic> updates = {};
-
-      if (displayName != null) {
+      final updates = <String, dynamic>{};
+      if (displayName != null && displayName.isNotEmpty) {
         updates['displayName'] = displayName;
-        // Firebase Auth'da da güncelle
-        await _authService.updateDisplayName(displayName);
+        await _authService.getFirebaseAuth().currentUser!.updateDisplayName(displayName);
       }
-
       if (photoUrl != null) {
         updates['photoUrl'] = photoUrl;
-        // Firebase Auth'da da güncelle
-        await _authService.updatePhotoURL(photoUrl);
       }
-
-      if (bio != null) {
-        updates['bio'] = bio;
-      }
-
-      if (preferredLanguage != null) {
-        updates['preferredLanguage'] = preferredLanguage;
-      }
-
       if (updates.isNotEmpty) {
-        await _firestoreService.updateUser(_user!.id, updates);
-
-        // Yerel kullanıcı verisini güncelle
-        _user = _user!.copyWith(
-          displayName: displayName ?? _user!.displayName,
-          photoUrl: photoUrl ?? _user!.photoUrl,
-          bio: bio ?? _user!.bio,
-          preferredLanguage: preferredLanguage ?? _user!.preferredLanguage,
-        );
-
-        _saveUserDataToPrefs(_user);
+        await FirebaseFirestore.instance.collection('users').doc(_user!.uid).update(updates);
+        _userData = {...?_userData, ...updates};
         notifyListeners();
+        print("AuthViewModel: Profil güncellendi: $updates");
       }
-
       return true;
     } catch (e) {
-      _errorMessage = 'Profil güncellenirken bir hata oluştu: ${e.toString()}';
-      print(_errorMessage);
+      _errorMessage = 'Profil güncellenirken hata oluştu: $e';
+      print("AuthViewModel: Profil güncelleme hatası: $_errorMessage");
       return false;
     } finally {
       _setLoading(false);
     }
   }
 
-  // Loading durumunu ayarla
-  void _setLoading(bool value) {
-    _isLoading = value;
+  // Kullanıcı dilini günceller
+  Future<void> updateUserLanguage(String languageCode) async {
+    try {
+      await _sharedPreferences.setString('language', languageCode);
+      notifyListeners();
+      print("AuthViewModel: Kullanıcı dili güncellendi: $languageCode");
+    } catch (e) {
+      print("AuthViewModel: Dil güncelleme hatası: $e");
+    }
+  }
+
+  // Yükleme durumunu ayarlar
+  void _setLoading(bool isLoading) {
+    _isLoading = isLoading;
     notifyListeners();
   }
 
-  // Hata mesajını temizle
+  // Hata mesajını temizler
   void clearError() {
     _errorMessage = null;
+    notifyListeners();
+  }
+
+  // Authentication hatalarını işler
+  void _handleAuthError(dynamic error) {
+    final errorCode = error.code ?? '';
+    if (errorCode == 'user-not-found') {
+      _errorMessage = 'Bu e-posta adresi ile kayıtlı kullanıcı bulunamadı.';
+    } else if (errorCode == 'wrong-password') {
+      _errorMessage = 'Hatalı şifre girdiniz.';
+    } else if (errorCode == 'invalid-email') {
+      _errorMessage = 'Geçersiz e-posta adresi.';
+    } else if (errorCode == 'email-already-in-use') {
+      _errorMessage = 'Bu e-posta adresi zaten kullanılıyor.';
+    } else if (errorCode == 'weak-password') {
+      _errorMessage = 'Şifre çok zayıf. Lütfen daha güçlü bir şifre seçin.';
+    } else if (errorCode == 'too-many-requests') {
+      _errorMessage = 'Çok fazla başarısız giriş denemesi. Lütfen daha sonra tekrar deneyin.';
+    } else {
+      _errorMessage = 'Bir hata oluştu: $error';
+    }
     notifyListeners();
   }
 }

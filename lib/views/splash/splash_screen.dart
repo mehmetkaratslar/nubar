@@ -1,15 +1,29 @@
+// Dosya: lib/views/splash/splash_screen.dart
+// Amaç: Açılış ekranı, kullanıcı durumunu kontrol eder ve yönlendirme yapar.
+// Bağlantı: language_selection_screen.dart veya home_screen.dart’a yönlendirir.
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:async';
-
 import '../../viewmodels/auth_viewmodel.dart';
-import '../../utils/theme.dart';
-import '../home/home_screen.dart';
+import '../../services/auth_service.dart';
+import '../../services/firestore_service.dart';
 import '../auth/login_screen.dart';
+import '../home/home_screen.dart';
 import 'language_selection_screen.dart';
 
 class SplashScreen extends StatefulWidget {
+  final AuthService authService;
+  final FirestoreService firestoreService;
+  final SharedPreferences sharedPreferences;
+
+  const SplashScreen({
+    Key? key,
+    required this.authService,
+    required this.firestoreService,
+    required this.sharedPreferences,
+  }) : super(key: key);
+
   @override
   _SplashScreenState createState() => _SplashScreenState();
 }
@@ -22,33 +36,27 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _navigateToNextScreen() async {
-    // 2 saniye bekle
-    await Future.delayed(Duration(seconds: 2));
+    try {
+      await Future.delayed(const Duration(seconds: 2));
+      if (!mounted) return;
 
-    // Dil seçimi yapılmış mı kontrol et
-    final prefs = await SharedPreferences.getInstance();
-    final hasSelectedLanguage = prefs.getBool('hasSelectedLanguage') ?? false;
+      final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+      final hasSelectedLanguage = widget.sharedPreferences.getBool('hasSelectedLanguage') ?? false;
 
-    if (!mounted) return;
-
-    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
-
-    if (hasSelectedLanguage) {
-      // Dil seçimi yapılmış, auth durumunu kontrol et
-      if (authViewModel.isAuthenticated) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => HomeScreen()),
-        );
+      if (hasSelectedLanguage) {
+        if (authViewModel.isAuthenticated) {
+          print("Kullanıcı giriş yapmış, home ekranına yönlendiriliyor.");
+          Navigator.of(context).pushReplacementNamed('/home');
+        } else {
+          print("Kullanıcı giriş yapmamış, login ekranına yönlendiriliyor.");
+          Navigator.of(context).pushReplacementNamed('/login');
+        }
       } else {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => LoginScreen()),
-        );
+        print("Dil seçimi yapılmamış, language_selection ekranına yönlendiriliyor.");
+        Navigator.of(context).pushReplacementNamed('/language_selection');
       }
-    } else {
-      // Dil seçimi yapılmamış
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => LanguageSelectionScreen()),
-      );
+    } catch (e) {
+      print("Yönlendirme sırasında hata oluştu: $e");
     }
   }
 
@@ -60,15 +68,14 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Logo
             Container(
               width: 120,
               height: 120,
               decoration: BoxDecoration(
-                color: AppTheme.primaryRed,
+                color: Theme.of(context).primaryColor,
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: Center(
+              child: const Center(
                 child: Text(
                   'NÛBAR',
                   style: TextStyle(
@@ -79,11 +86,10 @@ class _SplashScreenState extends State<SplashScreen> {
                 ),
               ),
             ),
-            SizedBox(height: 24),
-            // Yükleniyor göstergesi
+            const SizedBox(height: 24),
             CircularProgressIndicator(
               valueColor: AlwaysStoppedAnimation<Color>(
-                AppTheme.primaryRed,
+                Theme.of(context).primaryColor,
               ),
             ),
           ],

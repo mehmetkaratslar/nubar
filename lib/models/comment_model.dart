@@ -1,3 +1,6 @@
+// Dosya: lib/models/comment_model.dart
+// Amaç: Yorum verilerini temsil eder.
+// Bağlantı: content_viewmodel.dart, content_detail_screen.dart’ta kullanılır.
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CommentModel {
@@ -5,7 +8,7 @@ class CommentModel {
   final String userId;
   final String userName;
   final String text;
-  final Timestamp createdAt;
+  final DateTime createdAt;
 
   CommentModel({
     required this.id,
@@ -15,36 +18,33 @@ class CommentModel {
     required this.createdAt,
   });
 
-  // Firestore'dan veri oluştur
   factory CommentModel.fromMap(Map<String, dynamic> map, String id) {
     return CommentModel(
       id: id,
       userId: map['userId'] ?? '',
       userName: map['userName'] ?? 'Bilinmeyen',
       text: map['text'] ?? '',
-      createdAt: map['createdAt'] ?? Timestamp.now(),
+      createdAt: (map['createdAt'] as Timestamp).toDate(),
     );
   }
 
-  // Firestore'a kaydetmek için Map'e çevir
   Map<String, dynamic> toMap() {
     return {
       'userId': userId,
       'userName': userName,
       'text': text,
-      'createdAt': createdAt,
+      'createdAt': Timestamp.fromDate(createdAt),
     };
   }
 
-  // Kopyasını oluştur
   CommentModel copyWith({
     String? userId,
     String? userName,
     String? text,
-    Timestamp? createdAt,
+    DateTime? createdAt,
   }) {
     return CommentModel(
-      id: this.id,
+      id: id,
       userId: userId ?? this.userId,
       userName: userName ?? this.userName,
       text: text ?? this.text,

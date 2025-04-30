@@ -1,63 +1,31 @@
+// Dosya: lib/viewmodels/search_viewmodel.dart
+// Amaç: Arama işlemlerini yönetir.
+// Bağlantı: search_screen.dart ile çalışır.
 import 'package:flutter/material.dart';
-import '../models/content_model.dart';
 import '../services/firestore_service.dart';
+import '../models/content_model.dart';
 
 class SearchViewModel with ChangeNotifier {
   final FirestoreService _firestoreService;
-
   List<ContentModel> _searchResults = [];
-  bool _isLoading = false;
-  String? _errorMessage;
-  String _lastQuery = '';
+  String _query = '';
 
-  SearchViewModel({required FirestoreService firestoreService})
-      : _firestoreService = firestoreService;
+  SearchViewModel(this._firestoreService);
 
   List<ContentModel> get searchResults => _searchResults;
-  bool get isLoading => _isLoading;
-  String? get errorMessage => _errorMessage;
-  String get lastQuery => _lastQuery;
+  String get query => _query;
 
-  Future<void> searchContents(String query, {String? language}) async {
-    if (query.trim().isEmpty) {
-      clearSearch();
-      return;
+  // Arama yapar
+  Future<void> searchContents(String query) async {
+    _query = query;
+    if (query.isEmpty) {
+      _searchResults = [];
+    } else {
+      final data = await _firestoreService.searchContents(query);
+      _searchResults = data
+          .map((map) => ContentModel.fromMap(map, map['id']))
+          .toList();
     }
-
-    _lastQuery = query;
-    _setLoading(true);
-    _errorMessage = null;
-
-    try {
-      final results = await _firestoreService.searchContents(
-        query,
-        language: language,
-      );
-
-      _searchResults = results;
-      notifyListeners();
-    } catch (e) {
-      _errorMessage = 'Arama yapılırken hata oluştu: ${e.toString()}';
-      print(_errorMessage);
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  void clearSearch() {
-    _searchResults = [];
-    _lastQuery = '';
-    _errorMessage = null;
-    notifyListeners();
-  }
-
-  void _setLoading(bool value) {
-    _isLoading = value;
-    notifyListeners();
-  }
-
-  void clearError() {
-    _errorMessage = null;
     notifyListeners();
   }
 }

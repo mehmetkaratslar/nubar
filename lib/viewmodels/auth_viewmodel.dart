@@ -22,10 +22,12 @@ class AuthViewModel with ChangeNotifier {
   }
 
   bool get isAuthenticated => _isAuthenticated;
+  bool get isLoggedIn => _isAuthenticated; // Added for HomeScreen compatibility
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   User? get user => _user;
   Map<String, dynamic>? get userData => _userData;
+  Map<String, dynamic>? get userModel => _userData; // Added for HomeScreen compatibility
   bool get isEditor => _isEditor;
 
   // Authentication durumunu dinler
@@ -33,10 +35,10 @@ class AuthViewModel with ChangeNotifier {
     try {
       _authService.getFirebaseAuth().authStateChanges().listen((User? firebaseUser) async {
         if (firebaseUser != null) {
-          print("AuthViewModel: Kullanıcı giriş yaptı, UID: ${firebaseUser.uid}");
+          debugPrint("AuthViewModel: Kullanıcı giriş yaptı, UID: ${firebaseUser.uid}");
           await _fetchUserData(firebaseUser.uid);
         } else {
-          print("AuthViewModel: Kullanıcı çıkış yaptı.");
+          debugPrint("AuthViewModel: Kullanıcı çıkış yaptı.");
           _user = null;
           _userData = null;
           _isAuthenticated = false;
@@ -45,7 +47,7 @@ class AuthViewModel with ChangeNotifier {
         }
       });
     } catch (e) {
-      print("AuthViewModel: Authentication dinleme hatası: $e");
+      debugPrint("AuthViewModel: Authentication dinleme hatası: $e");
     }
   }
 
@@ -57,10 +59,17 @@ class AuthViewModel with ChangeNotifier {
 
       if (doc.exists) {
         _userData = doc.data() as Map<String, dynamic>;
+        // Ensure preferredLanguage exists, default to 'ku' if missing
+        if (!_userData!.containsKey('preferredLanguage')) {
+          _userData!['preferredLanguage'] = 'ku';
+          await FirebaseFirestore.instance.collection('users').doc(uid).update({
+            'preferredLanguage': 'ku',
+          });
+        }
         _user = _authService.getCurrentUser();
         _isAuthenticated = true;
         _isEditor = _userData?['role'] == 'editor';
-        print("AuthViewModel: Kullanıcı verileri alındı: ${_userData?['displayName']}");
+        debugPrint("AuthViewModel: Kullanıcı verileri alındı: ${_userData?['displayName']}");
       } else {
         final firebaseUser = _authService.getCurrentUser()!;
         final userData = {
@@ -68,6 +77,7 @@ class AuthViewModel with ChangeNotifier {
           'email': firebaseUser.email,
           'photoUrl': firebaseUser.photoURL,
           'role': 'user',
+          'preferredLanguage': 'ku', // Default language
           'createdAt': FieldValue.serverTimestamp(),
         };
         await FirebaseFirestore.instance.collection('users').doc(uid).set(userData);
@@ -75,13 +85,14 @@ class AuthViewModel with ChangeNotifier {
         _user = firebaseUser;
         _isAuthenticated = true;
         _isEditor = false;
-        print("AuthViewModel: Yeni kullanıcı verileri oluşturuldu: ${_userData?['displayName']}");
+        debugPrint("AuthViewModel: Yeni kullanıcı verileri oluşturuldu: ${_userData?['displayName']}");
       }
       _errorMessage = null;
       notifyListeners();
     } catch (e) {
-      _errorMessage = 'Kullanıcı bilgileri alınamadı: $e';
-      print("AuthViewModel: Kullanıcı verileri alınırken hata: $_errorMessage");
+      _errorMessage = 'Kullanıcı bilgileri alınırken bir hata oluştu. Lütfen tekrar deneyin: $e';
+      debugPrint("AuthViewModel: Kullanıcı verileri alınırken hata: $_errorMessage");
+      notifyListeners();
     } finally {
       _setLoading(false);
     }
@@ -96,16 +107,17 @@ class AuthViewModel with ChangeNotifier {
       final user = await _authService.signInWithEmail(email, password);
       if (user != null) {
         await _fetchUserData(user.uid);
-        print("AuthViewModel: E-posta ile giriş başarılı: ${user.uid}");
+        debugPrint("AuthViewModel: E-posta ile giriş başarılı: ${user.uid}");
         return true;
       } else {
-        _errorMessage = 'Giriş başarısız.';
-        print("AuthViewModel: E-posta ile giriş başarısız.");
+        _errorMessage = 'Giriş başarısız. Lütfen bilgilerinizi kontrol edin.';
+        debugPrint("AuthViewModel: E-posta ile giriş başarısız.");
+        notifyListeners();
         return false;
       }
     } catch (e) {
       _handleAuthError(e);
-      print("AuthViewModel: E-posta ile giriş hatası: $e");
+      debugPrint("AuthViewModel: E-posta ile giriş hatası: $e");
       return false;
     } finally {
       _setLoading(false);
@@ -121,16 +133,17 @@ class AuthViewModel with ChangeNotifier {
       final user = await _authService.signInWithGoogle();
       if (user != null) {
         await _fetchUserData(user.uid);
-        print("AuthViewModel: Google ile giriş başarılı: ${user.uid}");
+        debugPrint("AuthViewModel: Google ile giriş başarılı: ${user.uid}");
         return true;
       } else {
-        _errorMessage = 'Google ile giriş başarısız.';
-        print("AuthViewModel: Google ile giriş başarısız.");
+        _errorMessage = 'Google ile giriş başarısız. Lütfen tekrar deneyin.';
+        debugPrint("AuthViewModel: Google ile giriş başarısız.");
+        notifyListeners();
         return false;
       }
     } catch (e) {
       _handleAuthError(e);
-      print("AuthViewModel: Google ile giriş hatası: $e");
+      debugPrint("AuthViewModel: Google ile giriş hatası: $e");
       return false;
     } finally {
       _setLoading(false);
@@ -150,19 +163,21 @@ class AuthViewModel with ChangeNotifier {
           'email': email,
           'photoUrl': null,
           'role': 'user',
+          'preferredLanguage': 'ku', // Default language
           'createdAt': FieldValue.serverTimestamp(),
         });
         await _fetchUserData(user.uid);
-        print("AuthViewModel: Kayıt başarılı: ${user.uid}");
+        debugPrint("AuthViewModel: Kayıt başarılı: ${user.uid}");
         return true;
       } else {
-        _errorMessage = 'Kayıt başarısız.';
-        print("AuthViewModel: Kayıt başarısız.");
+        _errorMessage = 'Kayıt başarısız. Lütfen bilgilerinizi kontrol edin.';
+        debugPrint("AuthViewModel: Kayıt başarısız.");
+        notifyListeners();
         return false;
       }
     } catch (e) {
       _handleAuthError(e);
-      print("AuthViewModel: Kayıt hatası: $e");
+      debugPrint("AuthViewModel: Kayıt hatası: $e");
       return false;
     } finally {
       _setLoading(false);
@@ -178,10 +193,11 @@ class AuthViewModel with ChangeNotifier {
       _isAuthenticated = false;
       _isEditor = false;
       notifyListeners();
-      print("AuthViewModel: Kullanıcı çıkış yaptı.");
+      debugPrint("AuthViewModel: Kullanıcı çıkış yaptı.");
     } catch (e) {
-      _errorMessage = 'Çıkış yapılırken hata oluştu: $e';
-      print("AuthViewModel: Çıkış hatası: $_errorMessage");
+      _errorMessage = 'Çıkış yapılırken bir hata oluştu. Lütfen tekrar deneyin: $e';
+      debugPrint("AuthViewModel: Çıkış hatası: $_errorMessage");
+      notifyListeners();
     }
   }
 
@@ -191,11 +207,11 @@ class AuthViewModel with ChangeNotifier {
       _setLoading(true);
       _errorMessage = null;
       await _authService.getFirebaseAuth().sendPasswordResetEmail(email: email);
-      print("AuthViewModel: Şifre sıfırlama e-postası gönderildi: $email");
+      debugPrint("AuthViewModel: Şifre sıfırlama e-postası gönderildi: $email");
       return true;
     } catch (e) {
       _handleAuthError(e);
-      print("AuthViewModel: Şifre sıfırlama hatası: $e");
+      debugPrint("AuthViewModel: Şifre sıfırlama hatası: $e");
       return false;
     } finally {
       _setLoading(false);
@@ -220,12 +236,13 @@ class AuthViewModel with ChangeNotifier {
         await FirebaseFirestore.instance.collection('users').doc(_user!.uid).update(updates);
         _userData = {...?_userData, ...updates};
         notifyListeners();
-        print("AuthViewModel: Profil güncellendi: $updates");
+        debugPrint("AuthViewModel: Profil güncellendi: $updates");
       }
       return true;
     } catch (e) {
-      _errorMessage = 'Profil güncellenirken hata oluştu: $e';
-      print("AuthViewModel: Profil güncelleme hatası: $_errorMessage");
+      _errorMessage = 'Profil güncellenirken bir hata oluştu. Lütfen tekrar deneyin: $e';
+      debugPrint("AuthViewModel: Profil güncelleme hatası: $_errorMessage");
+      notifyListeners();
       return false;
     } finally {
       _setLoading(false);
@@ -236,23 +253,33 @@ class AuthViewModel with ChangeNotifier {
   Future<void> updateUserLanguage(String languageCode) async {
     try {
       await _sharedPreferences.setString('language', languageCode);
+      if (_user != null) {
+        await FirebaseFirestore.instance.collection('users').doc(_user!.uid).update({
+          'preferredLanguage': languageCode,
+        });
+        _userData?['preferredLanguage'] = languageCode;
+      }
       notifyListeners();
-      print("AuthViewModel: Kullanıcı dili güncellendi: $languageCode");
+      debugPrint("AuthViewModel: Kullanıcı dili güncellendi: $languageCode");
     } catch (e) {
-      print("AuthViewModel: Dil güncelleme hatası: $e");
+      debugPrint("AuthViewModel: Dil güncelleme hatası: $e");
     }
   }
 
   // Yükleme durumunu ayarlar
   void _setLoading(bool isLoading) {
-    _isLoading = isLoading;
-    notifyListeners();
+    if (_isLoading != isLoading) {
+      _isLoading = isLoading;
+      notifyListeners();
+    }
   }
 
   // Hata mesajını temizler
   void clearError() {
-    _errorMessage = null;
-    notifyListeners();
+    if (_errorMessage != null) {
+      _errorMessage = null;
+      notifyListeners();
+    }
   }
 
   // Authentication hatalarını işler
@@ -271,7 +298,7 @@ class AuthViewModel with ChangeNotifier {
     } else if (errorCode == 'too-many-requests') {
       _errorMessage = 'Çok fazla başarısız giriş denemesi. Lütfen daha sonra tekrar deneyin.';
     } else {
-      _errorMessage = 'Bir hata oluştu: $error';
+      _errorMessage = 'Bir hata oluştu. Lütfen tekrar deneyin: $error';
     }
     notifyListeners();
   }

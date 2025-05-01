@@ -1,110 +1,185 @@
-// Dosya: lib/views/profile/profile_screen.dart
-// Amaç: Kullanıcı profilini gösterir, kullanıcının paylaşımlarını ve bilgilerini listeler.
-// Bağlantı: home_screen.dart’tan profil sekmesine tıklanınca çağrılır.
+// Dosya: lib/views/profile/edit_profile_screen.dart
+// Amaç: Kullanıcı profilini düzenleme ekranını gösterir.
+// Bağlantı: app.dart üzerinden çağrılır, ProfileViewModel ile entegre çalışır.
+// Not: AppLocalizations import yolu düzeltildi.
+
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import '../../viewmodels/auth_viewmodel.dart';
+import 'package:file_picker/file_picker.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../viewmodels/profile_viewmodel.dart';
-import '../../models/content_model.dart';
-import '../content/content_detail_screen.dart';
+import '../../utils/app_constants.dart';
 
-class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({Key? key}) : super(key: key);
+class EditProfileScreen extends StatefulWidget {
+  const EditProfileScreen({Key? key}) : super(key: key);
 
   @override
-  _ProfileScreenState createState() => _ProfileScreenState();
+  _EditProfileScreenState createState() => _EditProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _EditProfileScreenState extends State<EditProfileScreen> {
+  final TextEditingController _displayNameController = TextEditingController();
+  final TextEditingController _bioController = TextEditingController();
+  File? _selectedPhoto;
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
-      final profileViewModel = Provider.of<ProfileViewModel>(context, listen: false);
-      if (authViewModel.user != null) {
-        profileViewModel.loadUserProfile(authViewModel.user!.uid);
-        profileViewModel.loadUserContents(authViewModel.user!.uid);
+    final profileViewModel = Provider.of<ProfileViewModel>(context, listen: false);
+    _displayNameController.text = profileViewModel.userDisplayName ?? '';
+    _bioController.text = profileViewModel.bio ?? '';
+  }
+
+  @override
+  void dispose() {
+    _displayNameController.dispose();
+    _bioController.dispose();
+    super.dispose();
+  }
+
+  // Profil resmini seçer
+  Future<void> _pickPhoto() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.image);
+    if (result != null && result.files.single.path != null) {
+      setState(() {
+        _selectedPhoto = File(result.files.single.path!);
+      });
+    }
+  }
+
+  // Profili günceller
+  Future<void> _updateProfile() async {
+    final profileViewModel = Provider.of<ProfileViewModel>(context, listen: false);
+    if (_selectedPhoto != null) {
+      await profileViewModel.updateProfilePhoto(_selectedPhoto!);
+      if (profileViewModel.errorMessage != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(profileViewModel.errorMessage!)),
+        );
+        return;
       }
-    });
+    }
+    await profileViewModel.updateProfile(
+      displayName: _displayNameController.text.trim(),
+      bio: _bioController.text.trim(),
+    );
+    if (profileViewModel.errorMessage != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(profileViewModel.errorMessage!)),
+      );
+    } else {
+      Navigator.of(context).pop();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final authViewModel = Provider.of<AuthViewModel>(context);
+    final l10n = AppLocalizations.of(context)!;
     final profileViewModel = Provider.of<ProfileViewModel>(context);
 
-    if (authViewModel.user == null) {
-      return const Center(child: Text('Lütfen giriş yapın'));
-    }
-
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profil'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () {
-              Navigator.pushNamed(context, '/edit_profile');
-            },
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppConstants.primaryRed,
+              Colors.white,
+              AppConstants.primaryGreen,
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
-        ],
-      ),
-      body: profileViewModel.user == null
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            CircleAvatar(
-              radius: 50,
-              backgroundImage: profileViewModel.user?['photoUrl'] != null
-                  ? CachedNetworkImageProvider(profileViewModel.user!['photoUrl'])
-                  : null,
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppConstants.spacingMedium),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Başlık
+                Text(
+                  l10n.editProfile,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: AppConstants.primaryRed,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Profil resmi
+                Center(
+                  child: GestureDetector(
+                    onTap: _pickPhoto,
+                    child: CircleAvatar(
+                      radius: 50,
+                      backgroundImage: _selectedPhoto != null
+                          ? FileImage(_selectedPhoto!)
+                          : profileViewModel.userPhotoUrl != null
+                          ? NetworkImage(profileViewModel.userPhotoUrl!)
+                          : null,
+                      child: _selectedPhoto == null && profileViewModel.userPhotoUrl == null
+                          ? Text(
+                        profileViewModel.userDisplayName?.isNotEmpty == true
+                            ? profileViewModel.userDisplayName![0]
+                            : '',
+                        style: const TextStyle(fontSize: 40),
+                      )
+                          : null,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Kullanıcı adı
+                TextField(
+                  controller: _displayNameController,
+                  decoration: InputDecoration(
+                    labelText: l10n.username,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Bio
+                TextField(
+                  controller: _bioController,
+                  decoration: InputDecoration(
+                    labelText: l10n.bio,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                  ),
+                  maxLines: 3,
+                ),
+                const SizedBox(height: 16),
+                // Kaydet butonu
+                profileViewModel.isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : ElevatedButton(
+                  onPressed: _updateProfile,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppConstants.primaryRed,
+                    minimumSize: const Size(double.infinity, 50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: Text(
+                    l10n.save,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            Text(
-              profileViewModel.user?['displayName'] ?? 'Kullanıcı Adı',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(profileViewModel.user?['bio'] ?? 'Biyografi yok'),
-            const SizedBox(height: 16),
-            const Text(
-              'Paylaşımlar',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: profileViewModel.contents.length,
-              itemBuilder: (context, index) {
-                final content = profileViewModel.contents[index];
-                return ListTile(
-                  leading: content.imageUrl != null
-                      ? CachedNetworkImage(
-                    imageUrl: content.imageUrl!,
-                    width: 50,
-                    height: 50,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => const CircularProgressIndicator(),
-                    errorWidget: (context, url, error) => const Icon(Icons.error),
-                  )
-                      : const Icon(Icons.image),
-                  title: Text(content.title),
-                  onTap: () {
-                    Navigator.pushNamed(
-                      context,
-                      '/content_detail',
-                      arguments: content.id,
-                    );
-                  },
-                );
-              },
-            ),
-          ],
+          ),
         ),
       ),
     );

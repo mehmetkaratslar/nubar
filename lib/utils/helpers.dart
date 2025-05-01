@@ -1,8 +1,22 @@
-// lib/utils/helpers.dart
-// Purpose: Provides utility functions for common tasks.
-// Location: lib/utils/
-// Connection: Used across the app for reusable logic.
+// Dosya: lib/utils/helpers.dart
+// Amaç: Uygulama genelinde kullanılan yardımcı metotları içerir.
+// Bağlantı: ContentViewModel ve EditorViewModel içinde kullanılır.
 
 class Helpers {
-  // Placeholder for helper methods
+  // Firebase Storage URL'sinden dosya yolunu çıkarır
+  static String getPathFromUrl(String url) {
+    try {
+      final uri = Uri.parse(url);
+      final pathSegments = uri.pathSegments;
+      if (pathSegments.length > 1 && pathSegments[0] == 'v0') {
+        // Firebase Storage URL formatı: /v0/b/{bucket}/o/{encoded_path}
+        final fullPath = Uri.decodeComponent(pathSegments[3]);
+        return fullPath;
+      }
+      return ''; // Geçersiz URL için boş string
+    } catch (e) {
+      print("URL'den yol çıkarılamadı: $e");
+      return ''; // Hata durumunda boş string
+    }
+  }
 }

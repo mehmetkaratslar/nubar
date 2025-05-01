@@ -1,17 +1,12 @@
 // Dosya: lib/views/home/home_screen.dart
-// Amaç: Ana sayfa, kategorileri ve içerikleri listeler.
-// Bağlantı: splash_screen.dart’tan yönlendirilir, category_screen.dart, profile_screen.dart, search_screen.dart’a bağlantı verir.
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import '../../viewmodels/auth_viewmodel.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../viewmodels/home_viewmodel.dart';
-import '../../models/content_model.dart';
-import '../auth/login_screen.dart';
-import '../profile/profile_screen.dart';
-
-import '../editor/editor_dashboard.dart';
 import '../../utils/app_constants.dart';
+import '../shared/content_card.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -20,558 +15,718 @@ class HomeScreen extends StatefulWidget {
   _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  int _currentIndex = 0;
+class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+
+    // Animasyon kontrolcüsü
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(parent: _animationController, curve: Curves.easeInOut)
+    );
+
+    _animationController.forward();
+
+    // Ana ekran verilerini asenkron olarak yükle
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final homeViewModel = Provider.of<HomeViewModel>(context, listen: false);
-      homeViewModel.loadHomePageData();
+      await Future.wait([
+        homeViewModel.loadHomePageData(),
+        homeViewModel.loadStories(),
+      ]);
     });
   }
 
   @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  // Yenileme işlemi için manuel metod
+  Future<void> _handleRefresh() async {
+    final homeViewModel = Provider.of<HomeViewModel>(context, listen: false);
+    await Future.wait([
+      homeViewModel.loadHomePageData(),
+      homeViewModel.loadStories(),
+    ]);
+    return Future.value();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final authViewModel = Provider.of<AuthViewModel>(context);
+    final l10n = AppLocalizations.of(context)!;
+    final homeViewModel = Provider.of<HomeViewModel>(context);
+    final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'NÛBAR',
-          style: TextStyle(fontWeight: FontWeight.bold),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppConstants.primaryRed.withOpacity(0.8),
+              Colors.white,
+              AppConstants.primaryGreen.withOpacity(0.6),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              Navigator.pushNamed(context, '/search');
-            },
+        child: SafeArea(
+          child: homeViewModel.isLoading
+              ? _buildLoadingIndicator()
+              : homeViewModel.errorMessage != null
+              ? _buildErrorMessage(homeViewModel.errorMessage!)
+              : FadeTransition(
+            opacity: _fadeAnimation,
+            child: _buildContent(context, homeViewModel, l10n, size),
           ),
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            onPressed: () {
-              // Bildirimler (gelecekte eklenecek)
-            },
-          ),
-        ],
-      ),
-      body: _buildSelectedTab(),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        selectedItemColor: AppConstants.primaryRed,
-        unselectedItemColor: AppConstants.darkGray,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Ana Sayfa',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.explore),
-            label: 'Keşfet',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.bookmark),
-            label: 'Kaydedilenler',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profil',
-          ),
-        ],
-      ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: BoxDecoration(
-                color: AppConstants.primaryRed,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CircleAvatar(
-                    radius: 36,
-                    backgroundColor: Colors.white,
-                    backgroundImage: authViewModel.userData?['photoUrl'] != null
-                        ? CachedNetworkImageProvider(authViewModel.userData!['photoUrl'])
-                        : null,
-                    child: authViewModel.userData?['photoUrl'] == null
-                        ? Text(
-                      authViewModel.userData?['displayName']?.substring(0, 1) ?? 'N',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: AppConstants.primaryRed,
-                      ),
-                    )
-                        : null,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    authViewModel.userData?['displayName'] ?? 'Kullanıcı',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    authViewModel.userData?['email'] ?? '',
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.language),
-              title: const Text('Dil Değiştir'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.pushNamed(context, '/language_selection');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text('Ayarlar'),
-              onTap: () {
-                Navigator.pop(context);
-                // Ayarlar ekranı (gelecekte eklenecek)
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.info),
-              title: const Text('Hakkında'),
-              onTap: () {
-                Navigator.pop(context);
-                // Hakkında ekranı (gelecekte eklenecek)
-              },
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.exit_to_app),
-              title: const Text('Çıkış Yap'),
-              onTap: () async {
-                await authViewModel.logout();
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const LoginScreen()),
-                      (route) => false,
-                );
-              },
-            ),
-          ],
         ),
       ),
-      floatingActionButton: authViewModel.isEditor
-          ? FloatingActionButton(
-        onPressed: () {
-          Navigator.pushNamed(context, '/editor_dashboard');
-        },
-        child: const Icon(Icons.edit),
-      )
-          : null,
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: AppConstants.primaryRed,
+        elevation: 4,
+        child: const Icon(Icons.add, color: Colors.white),
+        onPressed: () => Navigator.of(context).pushNamed('/content_editor'),
+      ),
     );
   }
 
-  Widget _buildSelectedTab() {
-    switch (_currentIndex) {
-      case 0:
-        return _buildHomeTab();
-      case 1:
-        return _buildExploreTab();
-      case 2:
-        return _buildSavedTab();
-      case 3:
-        return const ProfileScreen();
-      default:
-        return _buildHomeTab();
-    }
+  // Yükleme göstergesi
+  Widget _buildLoadingIndicator() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SpinKitPulsingGrid(
+            color: AppConstants.primaryRed,
+            size: 50.0,
+          ),
+          const SizedBox(height: 24),
+          const Text(
+            "Naverok tê barkirin...",
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.black54,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
-  Widget _buildHomeTab() {
-    final homeViewModel = Provider.of<HomeViewModel>(context);
-
-    if (homeViewModel.isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (homeViewModel.errorMessage != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(homeViewModel.errorMessage!),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => homeViewModel.loadHomePageData(),
-              child: const Text('Tekrar Dene'),
+  // Hata mesajı
+  Widget _buildErrorMessage(String errorMessage) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.error_outline,
+            size: 80,
+            color: AppConstants.primaryRed,
+          ),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Text(
+              errorMessage,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 16,
+                color: Colors.black87,
+              ),
             ),
-          ],
-        ),
-      );
-    }
+          ),
+          const SizedBox(height: 32),
+          ElevatedButton.icon(
+            onPressed: _handleRefresh,
+            icon: const Icon(Icons.refresh),
+            label: const Text("Dîsa biceribîne"),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppConstants.primaryRed,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-    return RefreshIndicator(
-      onRefresh: () => homeViewModel.loadHomePageData(),
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              height: 50,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: homeViewModel.categories.length,
-                itemBuilder: (context, index) {
-                  final category = homeViewModel.categories[index];
-                  final isSelected = category == homeViewModel.selectedCategory;
-                  return GestureDetector(
-                    onTap: () {
-                      homeViewModel.setCategory(category);
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.only(right: 10),
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: isSelected ? AppConstants.primaryRed : AppConstants.lightGray,
-                        borderRadius: BorderRadius.circular(25),
-                        border: Border.all(
-                          color: isSelected ? AppConstants.primaryRed : Colors.grey[300]!,
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          category,
-                          style: TextStyle(
-                            color: isSelected ? Colors.white : AppConstants.darkGray,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+  // Ana içerik yapısı
+  Widget _buildContent(BuildContext context, HomeViewModel homeViewModel, AppLocalizations l10n, Size size) {
+    return Column(
+      children: [
+        _buildHeader(),
+        _buildCategorySelector(homeViewModel, l10n),
+        Expanded(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildStorySection(homeViewModel, l10n),
+                _buildFeaturedSection(homeViewModel, l10n),
+                _buildAllContentsSection(homeViewModel, l10n, size),
+                const SizedBox(height: 80), // Ekranın altında boşluk
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Başlık ve Arama Düğmesi
+  Widget _buildHeader() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppConstants.primaryRed,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Center(
+                  child: Text(
+                    "N",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                "NÛBAR",
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                  color: AppConstants.primaryRed,
+                ),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.search, size: 26),
+                color: AppConstants.primaryRed,
+                onPressed: () => Navigator.of(context).pushNamed('/search'),
+              ),
+              IconButton(
+                icon: const Icon(Icons.notifications_outlined, size: 26),
+                color: AppConstants.primaryRed,
+                onPressed: () {},
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Kategori Seçici
+  Widget _buildCategorySelector(HomeViewModel homeViewModel, AppLocalizations l10n) {
+    final categories = [
+      {'id': 'all', 'name': l10n.allLabel},
+      {'id': 'history', 'name': l10n.historyLabel},
+      {'id': 'language', 'name': l10n.languageLabel},
+      {'id': 'music', 'name': l10n.musicLabel},
+      {'id': 'art', 'name': l10n.artLabel},
+      {'id': 'traditions', 'name': l10n.traditionsLabel},
+    ];
+
+    return Container(
+      height: 50,
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: categories.length,
+        itemBuilder: (context, index) {
+          final category = categories[index];
+          final isSelected = homeViewModel.selectedCategory == category['id'];
+
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: GestureDetector(
+              onTap: () => homeViewModel.selectCategory(category['id']),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: isSelected ? AppConstants.primaryRed : Colors.white,
+                  borderRadius: BorderRadius.circular(25),
+                  boxShadow: isSelected
+                      ? [BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  )]
+                      : null,
+                ),
+                child: Center(
+                  child: Text(
+                    category['name']!,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      color: isSelected ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // Hikayeler Bölümü
+  Widget _buildStorySection(HomeViewModel homeViewModel, AppLocalizations l10n) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          child: Text(
+            l10n.storiesLabel,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppConstants.primaryRed,
+            ),
+          ),
+        ),
+        SizedBox(
+          height: 110,
+          child: homeViewModel.stories.isEmpty
+              ? _buildEmptyPlaceholder(
+            context,
+            l10n.noStoriesLabel,
+            "Hikaye oluştur",
+            '/content_editor',
+            Icons.add_a_photo,
+          )
+              : ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: homeViewModel.stories.length + 1, // +1 için ekleme butonu
+            itemBuilder: (context, index) {
+              // Son öğe olarak ekleme butonu
+              if (index == 0) {
+                return Padding(
+                  padding: const EdgeInsets.only(right: 16),
+                  child: Column(
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.of(context).pushNamed('/content_editor'),
+                        child: Container(
+                          width: 68,
+                          height: 68,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: AppConstants.primaryRed.withOpacity(0.3),
+                              width: 2,
+                            ),
+                          ),
+                          child: Icon(
+                            Icons.add,
+                            size: 30,
+                            color: AppConstants.primaryRed.withOpacity(0.8),
                           ),
                         ),
                       ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 24),
-            if (homeViewModel.featuredContents.isNotEmpty) ...[
-              const Text(
-                'Öne Çıkan İçerikler',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Container(
-                height: 200,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: homeViewModel.featuredContents.length,
-                  itemBuilder: (context, index) {
-                    final content = homeViewModel.featuredContents[index];
-                    return _buildFeaturedContentCard(content);
-                  },
-                ),
-              ),
-              const SizedBox(height: 24),
-            ],
-            const Text(
-              'Son Eklenenler',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            if (homeViewModel.filteredContents.isEmpty)
-              const Center(
-                child: Text('Bu kategoride henüz içerik bulunmamaktadır.'),
-              )
-            else
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: homeViewModel.filteredContents.length,
-                itemBuilder: (context, index) {
-                  final content = homeViewModel.filteredContents[index];
-                  return _buildContentListItem(content);
-                },
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildExploreTab() {
-    return const Center(
-      child: Text('Keşfet - Bu özellik yakında - Bu özellik yakında eklenecek.'),
-    );
-  }
-
-  Widget _buildSavedTab() {
-    return const Center(
-      child: Text('Kaydedilenler - Bu özellik yakında eklenecek.'),
-    );
-  }
-
-  Widget _buildFeaturedContentCard(ContentModel content) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.pushNamed(
-          context,
-          '/content_detail',
-          arguments: content.id,
-        );
-      },
-      child: Container(
-        width: 280,
-        margin: const EdgeInsets.only(right: 16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-              child: content.imageUrl != null
-                  ? CachedNetworkImage(
-                imageUrl: content.imageUrl!,
-                height: 120,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                placeholder: (context, url) => Container(
-                  height: 120,
-                  color: Colors.grey[300],
-                  child: const Center(child: CircularProgressIndicator()),
-                ),
-                errorWidget: (context, url, error) => Container(
-                  height: 120,
-                  color: Colors.grey[300],
-                  child: const Icon(Icons.error),
-                ),
-              )
-                  : Container(
-                height: 120,
-                color: Colors.grey[300],
-                child: Center(
-                  child: Icon(
-                    Icons.image,
-                    size: 40,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppConstants.lightGray,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      content.category,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppConstants.darkGray,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    content.title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildContentListItem(ContentModel content) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.pushNamed(
-          context,
-          '/content_detail',
-          arguments: content.id,
-        );
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 5,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.horizontal(left: Radius.circular(12)),
-              child: content.imageUrl != null
-                  ? CachedNetworkImage(
-                imageUrl: content.imageUrl!,
-                height: 100,
-                width: 100,
-                fit: BoxFit.cover,
-                placeholder: (context, url) => Container(
-                  height: 100,
-                  width: 100,
-                  color: Colors.grey[300],
-                  child: const Center(child: CircularProgressIndicator()),
-                ),
-                errorWidget: (context, url, error) => Container(
-                  height: 100,
-                  width: 100,
-                  color: Colors.grey[300],
-                  child: const Icon(Icons.error),
-                ),
-              )
-                  : Container(
-                height: 100,
-                width: 100,
-                color: Colors.grey[300],
-                child: Center(
-                  child: Icon(
-                    Icons.image,
-                    size: 30,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppConstants.lightGray,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        content.category,
+                      const SizedBox(height: 8),
+                      const Text(
+                        "Yeni",
                         style: TextStyle(
                           fontSize: 12,
-                          color: AppConstants.darkGray,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      content.title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
+                    ],
+                  ),
+                );
+              }
+
+              final story = homeViewModel.stories[index - 1]; // -1 çünkü ilk öğe ekleme butonu
+              return Padding(
+                padding: const EdgeInsets.only(right: 16),
+                child: Column(
+                  children: [
+                    Stack(
                       children: [
-                        Icon(
-                          Icons.person,
-                          size: 14,
-                          color: Colors.grey[600],
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          content.authorName,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
+                        Container(
+                          width: 68,
+                          height: 68,
+                          padding: const EdgeInsets.all(3),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                AppConstants.primaryRed,
+                                AppConstants.primaryGreen,
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              image: story.mediaUrl != null
+                                  ? DecorationImage(
+                                image: NetworkImage(story.mediaUrl!),
+                                fit: BoxFit.cover,
+                              )
+                                  : null,
+                            ),
+                            child: story.mediaUrl == null
+                                ? Center(
+                              child: Text(
+                                story.userDisplayName[0],
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppConstants.primaryRed.withOpacity(0.8),
+                                ),
+                              ),
+                            )
+                                : null,
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Icon(
-                          Icons.access_time,
-                          size: 14,
-                          color: Colors.grey[600],
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          _formatDate(content.createdAt),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 2,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              Icons.play_arrow,
+                              size: 14,
+                              color: AppConstants.primaryRed,
+                            ),
                           ),
                         ),
                       ],
                     ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: 68,
+                      child: Text(
+                        story.userDisplayName,
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
-              ),
-            ),
-          ],
+              );
+            },
+          ),
         ),
-      ),
+        const SizedBox(height: 16),
+      ],
     );
   }
 
-  String _formatDate(DateTime? timestamp) {
-    if (timestamp == null) return 'Bilinmiyor';
-    final date = timestamp;
-    final now = DateTime.now();
-    final difference = now.difference(date);
+  // Öne Çıkan İçerikler Bölümü
+  Widget _buildFeaturedSection(HomeViewModel homeViewModel, AppLocalizations l10n) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                l10n.featuredContents,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppConstants.primaryRed,
+                ),
+              ),
+              InkWell(
+                onTap: () {},
+                borderRadius: BorderRadius.circular(20),
+                child: Padding(
+                  padding: const EdgeInsets.all(4.0),
+                  child: Row(
+                    children: [
+                      Text(
+                        l10n.seeAllLabel,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: AppConstants.primaryRed.withOpacity(0.8),
+                        ),
+                      ),
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        size: 12,
+                        color: AppConstants.primaryRed.withOpacity(0.8),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(
+          height: 240,
+          child: homeViewModel.featuredContents.isEmpty
+              ? _buildEmptyPlaceholder(
+            context,
+            l10n.noFeaturedContentsLabel,
+            "İçerik ekle",
+            '/content_editor',
+            Icons.add_to_photos,
+          )
+              : ListView.builder(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: homeViewModel.featuredContents.length,
+            itemBuilder: (context, index) {
+              final content = homeViewModel.featuredContents[index];
 
-    if (difference.inDays > 365) {
-      return '${(difference.inDays / 365).floor()} yıl önce';
-    } else if (difference.inDays > 30) {
-      return '${(difference.inDays / 30).floor()} ay önce';
-    } else if (difference.inDays > 0) {
-      return '${difference.inDays} gün önce';
-    } else if (difference.inHours > 0) {
-      return '${difference.inHours} saat önce';
-    } else if (difference.inMinutes > 0) {
-      return '${difference.inMinutes} dakika önce';
-    } else {
-      return 'Az önce';
-    }
+              return Container(
+                width: 200,
+                margin: const EdgeInsets.only(right: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: ContentCard(content: content),
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+
+  // Tüm İçerikler Bölümü
+  Widget _buildAllContentsSection(HomeViewModel homeViewModel, AppLocalizations l10n, Size size) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                l10n.allContents,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppConstants.primaryRed,
+                ),
+              ),
+              InkWell(
+                onTap: () => Navigator.of(context).pushNamed('/all_contents'),
+                borderRadius: BorderRadius.circular(20),
+                child: Padding(
+                  padding: const EdgeInsets.all(4.0),
+                  child: Row(
+                    children: [
+                      Text(
+                        l10n.seeAllLabel,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: AppConstants.primaryRed.withOpacity(0.8),
+                        ),
+                      ),
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        size: 12,
+                        color: AppConstants.primaryRed.withOpacity(0.8),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        homeViewModel.filteredContents.isEmpty
+            ? Container(
+          height: 200,
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          child: _buildEmptyPlaceholder(
+            context,
+            l10n.noContentsFoundLabel,
+            "İlk içeriğinizi oluşturun",
+            '/content_editor',
+            Icons.post_add,
+          ),
+        )
+            : Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: StaggeredGridView(
+            crossAxisCount: 2,
+            itemCount: homeViewModel.filteredContents.length > 4
+                ? 4
+                : homeViewModel.filteredContents.length,
+            itemBuilder: (context, index) {
+              final content = homeViewModel.filteredContents[index];
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: ContentCard(content: content),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Boş durumlar için yer tutucu
+  Widget _buildEmptyPlaceholder(
+      BuildContext context, String message, String actionText, String route, IconData icon) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: AppConstants.primaryRed.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              size: 30,
+              color: AppConstants.primaryRed,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.black54,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pushNamed(route),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppConstants.primaryRed,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              minimumSize: const Size(120, 36),
+            ),
+            child: Text(actionText),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// StaggeredGridView Widget
+class StaggeredGridView extends StatelessWidget {
+  final int crossAxisCount;
+  final int itemCount;
+  final IndexedWidgetBuilder itemBuilder;
+
+  const StaggeredGridView({
+    Key? key,
+    required this.crossAxisCount,
+    required this.itemCount,
+    required this.itemBuilder,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 0.75,
+      ),
+      itemCount: itemCount,
+      itemBuilder: itemBuilder,
+    );
   }
 }

@@ -1,145 +1,213 @@
-// Dosya: lib/models/content_model.dart
-// Amaç: İçerik verilerini temsil eder (başlık, açıklama, medya, kategori).
-// Bağlantı: content_viewmodel.dart, home_screen.dart, content_detail_screen.dart’ta kullanılır.
-import 'package:cloud_firestore/cloud_firestore.dart';
+// Dosya: lib/views/content/content_detail_screen.dart
+// Amaç: İçerik detaylarını gösterir.
+// Bağlantı: app.dart üzerinden çağrılır, ContentViewModel ile entegre çalışır.
+// Not: BuildContext parametresi kaldırıldı, hata yönetimi UI katmanına taşındı.
 
-class ContentModel {
-  final String id;
-  final String title;
-  final String description;
-  final String category;
-  final String language;
-  final String? imageUrl;
-  final List<String>? mediaUrls;
-  final String? videoUrl;
-  final String userId;
-  final String authorName;
-  final String? userPhotoUrl;
-  final String? userDisplayName;
-  final bool isFeatured;
-  final int viewCount;
-  final int likeCount;
-  final int commentCount;
-  final DateTime? createdAt;
-  final String? thumbnailUrl;
-  final String? content;
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../l10n/generated/app_localizations.dart';
+import '../../viewmodels/content_viewmodel.dart';
 
-  ContentModel({
-    required this.id,
-    required this.title,
-    required this.description,
-    required this.category,
-    required this.language,
-    this.imageUrl,
-    this.mediaUrls,
-    this.videoUrl,
-    required this.userId,
-    required this.authorName,
-    this.userPhotoUrl,
-    this.userDisplayName,
-    required this.isFeatured,
-    required this.viewCount,
-    required this.likeCount,
-    required this.commentCount,
-    this.createdAt,
-    this.thumbnailUrl,
-    this.content,
-  });
+import '../../utils/app_constants.dart';
+import '../../models/content_model.dart';
 
-  factory ContentModel.fromMap(Map<String, dynamic> map, String id) {
-    return ContentModel(
-      id: id,
-      title: map['title'] ?? '',
-      description: map['description'] ?? '',
-      category: map['category'] ?? 'Genel',
-      language: map['language'] ?? 'tr',
-      imageUrl: map['imageUrl'],
-      mediaUrls: map['mediaUrls'] != null ? List<String>.from(map['mediaUrls']) : null,
-      videoUrl: map['videoUrl'],
-      userId: map['userId'] ?? '',
-      authorName: map['authorName'] ?? 'Bilinmeyen',
-      userPhotoUrl: map['userPhotoUrl'],
-      userDisplayName: map['userDisplayName'],
-      isFeatured: map['isFeatured'] ?? false,
-      viewCount: map['viewCount'] ?? 0,
-      likeCount: map['likeCount'] ?? 0,
-      commentCount: map['commentCount'] ?? 0,
-      createdAt: map['createdAt'] is Timestamp
-          ? (map['createdAt'] as Timestamp).toDate()
-          : (map['createdAt'] != null ? DateTime.parse(map['createdAt']) : null),
-      thumbnailUrl: map['thumbnailUrl'],
-      content: map['content'],
-    );
-  }
+class ContentDetailScreen extends StatefulWidget {
+  final String contentId;
 
-  Map<String, dynamic> toMap() {
-    return {
-      'title': title,
-      'description': description,
-      'category': category,
-      'language': language,
-      'imageUrl': imageUrl,
-      'mediaUrls': mediaUrls,
-      'videoUrl': videoUrl,
-      'userId': userId,
-      'authorName': authorName,
-      'userPhotoUrl': userPhotoUrl,
-      'userDisplayName': userDisplayName,
-      'isFeatured': isFeatured,
-      'viewCount': viewCount,
-      'likeCount': likeCount,
-      'commentCount': commentCount,
-      'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : null,
-      'thumbnailUrl': thumbnailUrl,
-      'content': content,
-    };
-  }
+  const ContentDetailScreen({Key? key, required this.contentId}) : super(key: key);
 
-  ContentModel copyWith({
-    String? title,
-    String? description,
-    String? category,
-    String? language,
-    String? imageUrl,
-    List<String>? mediaUrls,
-    String? videoUrl,
-    String? userId,
-    String? authorName,
-    String? userPhotoUrl,
-    String? userDisplayName,
-    bool? isFeatured,
-    int? viewCount,
-    int? likeCount,
-    int? commentCount,
-    DateTime? createdAt,
-    String? thumbnailUrl,
-    String? content,
-  }) {
-    return ContentModel(
-      id: id,
-      title: title ?? this.title,
-      description: description ?? this.description,
-      category: category ?? this.category,
-      language: language ?? this.language,
-      imageUrl: imageUrl ?? this.imageUrl,
-      mediaUrls: mediaUrls ?? this.mediaUrls,
-      videoUrl: videoUrl ?? this.videoUrl,
-      userId: userId ?? this.userId,
-      authorName: authorName ?? this.authorName,
-      userPhotoUrl: userPhotoUrl ?? this.userPhotoUrl,
-      userDisplayName: userDisplayName ?? this.userDisplayName,
-      isFeatured: isFeatured ?? this.isFeatured,
-      viewCount: viewCount ?? this.viewCount,
-      likeCount: likeCount ?? this.likeCount,
-      commentCount: commentCount ?? this.commentCount,
-      createdAt: createdAt ?? this.createdAt,
-      thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
-      content: content ?? this.content,
-    );
+  @override
+  _ContentDetailScreenState createState() => _ContentDetailScreenState();
+}
+
+class _ContentDetailScreenState extends State<ContentDetailScreen> {
+  final TextEditingController _commentController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    // İçerik verilerini asenkron olarak yükle
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final contentViewModel = Provider.of<ContentViewModel>(context, listen: false);
+      await contentViewModel.loadContent(widget.contentId);
+      if (contentViewModel.errorMessage != null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(contentViewModel.errorMessage!)),
+          );
+          Navigator.of(context).pop();
+        }
+      }
+    });
   }
 
   @override
-  String toString() {
-    return 'ContentModel(id: $id, title: $title, category: $category)';
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final contentViewModel = Provider.of<ContentViewModel>(context);
+
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppConstants.primaryRed,
+              Colors.white,
+              AppConstants.primaryGreen,
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: SafeArea(
+          child: contentViewModel.isLoading
+              ? const Center(
+            child: CircularProgressIndicator(),
+          )
+              : contentViewModel.content == null
+              ? Center(child: Text(l10n.contentLoadError))
+              : SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // İçerik Görseli (varsa)
+                if (contentViewModel.content!.thumbnailUrl != null)
+                  Image.network(
+                    contentViewModel.content!.thumbnailUrl!,
+                    height: 200,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                Padding(
+                  padding: const EdgeInsets.all(AppConstants.spacingMedium),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // İçerik Başlığı
+                      Text(
+                        contentViewModel.content!.title,
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: AppConstants.primaryRed,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      // İçerik Özeti
+                      Text(
+                        contentViewModel.content!.summary,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.black54,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      // İçerik Metni
+                      Text(
+                        contentViewModel.content!.text,
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      const SizedBox(height: 16),
+                      // Beğeni ve Yorum Sayısı
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              IconButton(
+                                onPressed: () async {
+                                  await contentViewModel.likeContent();
+                                  if (contentViewModel.errorMessage != null) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text(contentViewModel.errorMessage!)),
+                                    );
+                                  }
+                                },
+                                icon: const Icon(Icons.favorite),
+                                color: AppConstants.primaryRed,
+                              ),
+                              Text('${contentViewModel.content!.likeCount} ${l10n.likes}'),
+                            ],
+                          ),
+                          Text('${contentViewModel.content!.commentCount} ${l10n.comments}'),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      // Yorum Ekleme Alanı
+                      TextField(
+                        controller: _commentController,
+                        decoration: InputDecoration(
+                          labelText: l10n.writeComment,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      ElevatedButton(
+                        onPressed: () async {
+                          if (_commentController.text.isNotEmpty) {
+                            await contentViewModel.addComment(_commentController.text);
+                            if (contentViewModel.errorMessage != null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(contentViewModel.errorMessage!)),
+                              );
+                            } else {
+                              _commentController.clear();
+                            }
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppConstants.primaryRed,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: Text(
+                          l10n.addComment,
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      // Silme Butonu
+                      ElevatedButton(
+                        onPressed: () async {
+                          await contentViewModel.deleteContent();
+                          if (contentViewModel.errorMessage != null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(contentViewModel.errorMessage!)),
+                            );
+                          } else {
+                            Navigator.of(context).pop();
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: Text(
+                          l10n.delete,
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

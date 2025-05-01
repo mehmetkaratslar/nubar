@@ -1,4 +1,3 @@
-
 {
   "@@locale": "en",
   "appName": "Nûbar",
@@ -191,5 +190,9 @@
   "exploreLabel": "Explore",
   "savedLabel": "Saved",
   "noContentsFoundLabel": "No contents found",
-  "noSearchResultsLabel": "No search results found"
+  "noSearchResultsLabel": "No search results found",
+  "noStoriesLabel": "No stories found",
+  "noNotificationsLabel": "No notifications found",
+  "signUp": "Sign Up",
+  "noAccount": "No account? Sign up"
 }

@@ -1,121 +1,164 @@
 // Dosya: lib/viewmodels/profile_viewmodel.dart
-// Amaç: Kullanıcı profil bilgilerini ve paylaşımlarını yönetir.
-// Bağlantı: profile_screen.dart, edit_profile_screen.dart, content_detail_screen.dart ile çalışır.
+// Amaç: Kullanıcı profil işlemlerini yönetir.
+// Bağlantı: profile_screen.dart, edit_profile_screen.dart ile entegre çalışır, FirestoreService ve StorageService ile veri yönetimi yapar.
+// Not: summary ve text parametreleri eklendi.
+
 import 'dart:io';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/material.dart';
-import '../services/firestore_service.dart';
+import 'package:flutter/foundation.dart';
 import '../models/content_model.dart';
+import '../models/content_status.dart';
+import '../services/firestore_service.dart';
+import '../services/storage_service.dart';
+import '../utils/service_exception.dart';
 
 class ProfileViewModel with ChangeNotifier {
   final FirestoreService _firestoreService;
-  final FirebaseStorage _storage = FirebaseStorage.instance;
-  List<ContentModel> _contents = [];
-  Map<String, dynamic>? _user;
-  List<String> _savedContentIds = [];
+  final StorageService _storageService;
+  String? _userId;
+  String? _userDisplayName;
+  String? _userPhotoUrl;
+  String? _bio;
+  List<ContentModel> _userContents = [];
+  bool _isLoading = false;
+  String? _errorMessage;
 
-  ProfileViewModel(this._firestoreService);
+  ProfileViewModel({
+    required FirestoreService firestoreService,
+    required StorageService storageService,
+  })  : _firestoreService = firestoreService,
+        _storageService = storageService;
 
-  List<ContentModel> get contents => _contents;
-  Map<String, dynamic>? get user => _user;
-  List<String> get savedContentIds => _savedContentIds;
+  String? get userId => _userId;
+  String? get userDisplayName => _userDisplayName;
+  String? get userPhotoUrl => _userPhotoUrl;
+  String? get bio => _bio;
+  List<ContentModel> get userContents => _userContents;
+  bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
 
   // Kullanıcı profilini yükler
-  Future<void> loadUserProfile(String userId) async {
-    _user = await _firestoreService.getUserData(userId);
-    notifyListeners();
-  }
-
-  // Kullanıcının paylaşımlarını yükler
-  Future<void> loadUserContents(String userId) async {
-    final data = await _firestoreService.getContents();
-    _contents = data
-        .map((map) => ContentModel.fromMap(map, map['id']))
-        .where((content) => content.userId == userId)
-        .toList();
-    notifyListeners();
-  }
-
-  // Kullanıcının kaydedilen içeriklerini yükler
-  Future<void> loadSavedContents(String userId) async {
+  Future<void> loadProfile(String userId) async {
     try {
-      final doc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
-      final data = doc.data();
-      _savedContentIds = data != null && data['savedContents'] != null
-          ? List<String>.from(data['savedContents'])
-          : [];
-      notifyListeners();
-    } catch (e) {
-      print('Kaydedilen içerikler yüklenirken hata: $e');
-    }
-  }
-
-  // İçeriği kaydetme/kaldırma
-  Future<void> toggleSaveContent(String userId, String contentId) async {
-    try {
-      await loadSavedContents(userId);
-      if (_savedContentIds.contains(contentId)) {
-        _savedContentIds.remove(contentId);
-      } else {
-        _savedContentIds.add(contentId);
+      _setLoading(true);
+      _errorMessage = null;
+      _userId = userId;
+      final userData = await _firestoreService.getUserData(userId);
+      if (userData != null) {
+        _userDisplayName = userData['displayName'];
+        _userPhotoUrl = userData['photoUrl'];
+        _bio = userData['bio'];
       }
-      await FirebaseFirestore.instance.collection('users').doc(userId).update({
-        'savedContents': _savedContentIds,
-      });
+      await loadUserContents(userId);
       notifyListeners();
     } catch (e) {
-      print('İçerik kaydetme/kaldırma hatası: $e');
+      _errorMessage = e.toString();
+      notifyListeners();
+    } finally {
+      _setLoading(false);
     }
   }
 
-  // Profil fotoğrafını günceller
-  Future<String?> updateProfilePhoto(String userId, File imageFile) async {
+  // Kullanıcı içeriklerini yükler
+  Future<void> loadUserContents(String userId) async {
     try {
-      final storageRef = _storage.ref().child('profile_photos/$userId.jpg');
-      await storageRef.putFile(imageFile);
-      final photoUrl = await storageRef.getDownloadURL();
-      await _firestoreService.updateUserProfile(userId, {'photoUrl': photoUrl});
-      _user?['photoUrl'] = photoUrl;
+      _setLoading(true);
+      _errorMessage = null;
+      final contentDocs = await _firestoreService.getContents();
+      _userContents = contentDocs
+          .where((doc) => doc['userId'] == userId)
+          .map((doc) => ContentModel.fromMap(doc, doc['id']))
+          .toList();
       notifyListeners();
-      return photoUrl;
     } catch (e) {
-      print('Fotoğraf güncelleme hatası: $e');
-      return null;
+      _errorMessage = e.toString();
+      notifyListeners();
+    } finally {
+      _setLoading(false);
     }
   }
 
-  // Profil bilgilerini günceller
-  Future<bool> updateProfile(String userId, Map<String, dynamic> data) async {
+  // Profil resmini günceller
+  Future<void> updateProfilePhoto(File photo) async {
     try {
-      await _firestoreService.updateUserProfile(userId, data);
-      _user = {...?_user, ...data};
+      _setLoading(true);
+      _errorMessage = null;
+      String fileName = DateTime.now().millisecondsSinceEpoch.toString() + photo.path.split('/').last;
+      _userPhotoUrl = await _storageService.uploadFile('profile_photos/$fileName', photo);
+      await _firestoreService.updateUserProfile(_userId!, {'photoUrl': _userPhotoUrl});
       notifyListeners();
-      return true;
     } catch (e) {
-      print('Profil güncelleme hatası: $e');
-      return false;
+      _errorMessage = e.toString();
+      notifyListeners();
+    } finally {
+      _setLoading(false);
     }
   }
 
-  // Medya URL’lerini kullanma
-  List<String> getMediaUrls(String contentId) {
-    final content = _contents.firstWhere(
-          (c) => c.id == contentId,
-      orElse: () => ContentModel(
+  // Profili günceller
+  Future<void> updateProfile({String? displayName, String? bio}) async {
+    try {
+      _setLoading(true);
+      _errorMessage = null;
+      final updatedData = <String, dynamic>{};
+      if (displayName != null) {
+        _userDisplayName = displayName;
+        updatedData['displayName'] = displayName;
+      }
+      if (bio != null) {
+        _bio = bio;
+        updatedData['bio'] = bio;
+      }
+      await _firestoreService.updateUserProfile(_userId!, updatedData);
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  // Yeni içerik oluşturur
+  Future<void> createContent() async {
+    try {
+      _setLoading(true);
+      _errorMessage = null;
+      final content = ContentModel(
         id: '',
-        title: '',
+        title: 'Yeni İçerik',
         description: '',
-        category: '',
-        language: '',
-        userId: '',
-        authorName: '',
-        isFeatured: false,
-        viewCount: 0,
+        contentJson: null,
+        category: 'history',
+        mediaUrls: [],
+        thumbnailUrl: null,
+        userId: _userId!,
+        userDisplayName: _userDisplayName!,
+        authorName: _userDisplayName!,
+        userPhotoUrl: _userPhotoUrl,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
         likeCount: 0,
         commentCount: 0,
-      ),
-    );
-    return content.mediaUrls ?? [];
+        viewCount: 0,
+        isFeatured: false,
+        status: ContentStatus.draft,
+        summary: 'Yeni içerik özeti', // Özet eklendi
+        text: 'Yeni içerik metni', // Metin eklendi
+      );
+      await _firestoreService.createContent(content);
+      await loadUserContents(_userId!);
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  // Yükleme durumunu ayarlar
+  void _setLoading(bool value) {
+    _isLoading = value;
+    notifyListeners();
   }
 }

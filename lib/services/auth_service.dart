@@ -1,67 +1,79 @@
 // Dosya: lib/services/auth_service.dart
-// Amaç: Firebase Authentication işlemlerini yönetir (kullanıcı girişi, çıkışı, rol yönetimi).
-// Bağlantı: auth_viewmodel.dart, login_screen.dart, register_screen.dart gibi ekranlarda kullanılır.
+// Amaç: Firebase Authentication ile kullanıcı kimlik doğrulama işlemlerini yönetir.
+// Bağlantı: AuthViewModel ile entegre çalışır, login_screen.dart ve register_screen.dart üzerinden çağrılır.
+// Not: signInWithEmailAndPassword ve registerWithEmailAndPassword metodları eklendi.
+
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import '../utils/service_exception.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-
-  // FirebaseAuth örneğini döndürür
-  FirebaseAuth getFirebaseAuth() {
-    return _auth;
-  }
-
-  // Geçerli kullanıcıyı döndürür
-  User? getCurrentUser() {
-    return _auth.currentUser;
-  }
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
 
   // E-posta ve şifre ile giriş yapar
-  Future<User?> signInWithEmail(String email, String password) async {
+  Future<User> signInWithEmailAndPassword(String email, String password) async {
     try {
-      final result = await _auth.signInWithEmailAndPassword(
-          email: email, password: password);
-      return result.user;
+      final UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      return userCredential.user!;
     } catch (e) {
-      print('Giriş hatası: $e');
-      return null;
-    }
-  }
-
-  // Google ile giriş (opsiyonel, gerektiğinde kullanılır)
-  Future<User?> signInWithGoogle() async {
-    try {
-      final GoogleAuthProvider googleProvider = GoogleAuthProvider();
-      final result = await _auth.signInWithProvider(googleProvider);
-      return result.user;
-    } catch (e) {
-      print('Google giriş hatası: $e');
-      return null;
+      throw ServiceException('Giriş hatası: $e');
     }
   }
 
   // E-posta ve şifre ile kayıt yapar
-  Future<User?> register(String email, String password, String displayName) async {
+  Future<User> registerWithEmailAndPassword(String email, String password, String displayName) async {
     try {
-      UserCredential result = await _auth.createUserWithEmailAndPassword(
+      final UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
-      await result.user!.updateDisplayName(displayName);
-      return result.user;
+      await userCredential.user!.updateDisplayName(displayName);
+      return userCredential.user!;
     } catch (e) {
-      print('Kayıt hatası: $e');
-      return null;
+      throw ServiceException('Kayıt hatası: $e');
     }
   }
 
-  // Kullanıcı çıkışı yapar
-  Future<void> signOut() async {
+  // Google ile giriş yapar
+  Future<User> signInWithGoogle() async {
     try {
-      await _auth.signOut();
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) throw ServiceException('Google girişi iptal edildi');
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+      final UserCredential userCredential = await _auth.signInWithCredential(credential);
+      return userCredential.user!;
     } catch (e) {
-      print('Çıkış hatası: $e');
-      rethrow;
+      throw ServiceException('Google ile giriş hatası: $e');
     }
   }
+
+  // Şifre sıfırlama e-postası gönderir
+  Future<void> resetPassword(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+    } catch (e) {
+      throw ServiceException('Şifre sıfırlama hatası: $e');
+    }
+  }
+
+  // Çıkış yapar
+  Future<void> signOut() async {
+    try {
+      await _googleSignIn.signOut();
+      await _auth.signOut();
+    } catch (e) {
+      throw ServiceException('Çıkış hatası: $e');
+    }
+  }
+
+  // Mevcut kullanıcıyı getirir
+  User? get currentUser => _auth.currentUser;
 }

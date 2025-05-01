@@ -1,90 +1,96 @@
-# pubspec.yaml
-# Amaç: Projenin bağımlılıklarını, varlıklarını ve yapılandırmalarını tanımlar.
-# Konum: Proje kök dizini (nubar/)
-# Bağlantı: Flutter, bu dosyayı paketleri ve varlıkları yönetmek için kullanır.
-
+# Uygulama adı
 name: nubar
-description: Kürt kültürünü korumak, yaşatmak ve dünya çapında tanıtmak amacıyla geliştirilen mobil uygulama.
+
+# Uygulama açıklaması
+description: Mobil uygulama - Kürt kültürünü korumak ve tanıtmak için.
 
 # Uygulama versiyonu
+# Format: major.minor.patch+build (örneğin, 1.0.0+1)
 version: 1.0.0+1
 
+# Dart ve Flutter SDK gereksinimleri
+# SDK sürüm aralığı, projenin uyumlu olduğu Dart sürümlerini belirtir
 environment:
-  sdk: ">=3.0.0 <4.0.0"
+  sdk: ">=3.4.0 <4.0.0"
 
+# Bağımlılıklar
+# Uygulamanın çalışması için gereken kütüphaneler
 dependencies:
   flutter:
-    sdk: flutter
+    sdk: flutter # Flutter temel kütüphanesi, UI ve widget'lar için
   flutter_localizations:
-    sdk: flutter
+    sdk: flutter # Çoklu dil desteği için, AppLocalizations ile kullanılır
 
-  # Firebase paketleri - Backend hizmetleri için
-  firebase_core: ^3.0.0
-  firebase_auth: ^5.0.0
-  cloud_firestore: ^5.0.0
-  firebase_storage: ^12.0.0
-  firebase_analytics: ^11.0.0
-  # firebase_dynamic_links kaldırıldı çünkü kullanımdan kalkmış
+  # Firebase bağımlılıkları
+  # Backend servisleri (kimlik doğrulama, veritabanı, depolama, analitik) için
+  firebase_core: ^3.4.0 # Firebase bağlantısı için temel kütüphane
+  firebase_auth: ^5.3.0 # Kullanıcı kimlik doğrulama (e-posta, Google ile giriş)
+  cloud_firestore: ^5.4.2 # Firestore NoSQL veritabanı, içerik ve kullanıcı verileri için
+  firebase_storage: ^12.3.0 # Resim ve dosya depolama, içerik görselleri için
+  firebase_analytics: ^11.3.0 # Kullanıcı davranış analitiği, ekran görüntülemeleri ve olaylar için
+  firebase_app_check: ^0.3.0 # App Check için bağımlılık
+
+  # Zengin metin editörü
+  # İçerik oluşturma ve düzenleme için (content_editor_screen.dart)
+  flutter_quill: ^10.7.0 # Zengin metin editörü, Quill formatında içerik yönetimi
+
+  # Görsel ve video seçme
+  # Profil resmi ve içerik görselleri için (edit_profile_screen.dart, content_editor_screen.dart)
+  file_picker: ^8.1.2 # Görsel ve video seçme
 
   # Google ile giriş
-  google_sign_in: ^6.2.1
+  # Kullanıcı kimlik doğrulama için (login_screen.dart, register_screen.dart)
+  google_sign_in: ^6.2.1 # Google hesabı ile oturum açma
 
   # Durum yönetimi
-  provider: ^6.0.5
+  # ViewModel'ler için durum yönetimi (auth_viewmodel.dart, content_viewmodel.dart, vb.)
+  provider: ^6.1.2 # MVVM yapısı için durum yönetimi
 
-  # Görsel ve UI paketleri
-  cupertino_icons: ^1.0.8
-  cached_network_image: ^3.3.1
-  flutter_svg: ^2.0.10
-  shimmer: ^3.0.0
+  # UI ve görsel kütüphaneler
+  cupertino_icons: ^1.0.8 # iOS stil ikonlar, genel kullanım için
+  cached_network_image: ^3.4.0 # Ağdan gelen resimleri önbellekleme (content_detail_screen.dart, content_card.dart)
+  flutter_spinkit: ^5.2.1 # Yükleme animasyonları için (splash_screen.dart)
 
-  # Yerelleştirme ve çoklu dil
-  intl: ^0.19.0
+  # Çoklu dil ve tarih formatlama
+  # Yerelleştirme (app_localizations.dart) ve tarih-saat formatlama (extensions.dart)
+  intl: ^0.19.0 # Yerelleştirme ve tarih-saat formatlama
 
-  # Medya işleme
-  image_picker: ^1.1.2
-  video_player: ^2.9.1
-  chewie: ^1.7.1
+  # Yerel veri saklama
+  # Kullanıcı tercihleri ve dil seçimi için (auth_viewmodel.dart, splash_screen.dart)
+  shared_preferences: ^2.3.2 # Küçük veriler için yerel depolama
 
-  # Sosyal medya paylaşımı
-  share_plus: ^9.0.0
-  url_launcher: ^6.3.0
-
-  # Çevrimdışı depolama ve önbellekleme
-  shared_preferences: ^2.2.3
-  sqflite: ^2.3.3
-  path_provider: ^2.1.3
-
-  # Form ve validasyon
-  form_field_validator: ^1.1.0
-
-  # Diğer
-  timeago: ^3.6.1
-  connectivity_plus: ^6.0.3
-  flutter_native_splash: ^2.4.1
-  package_info_plus: ^8.0.0
-
+# Geliştirme bağımlılıkları
+# Test yazımı, kod kalitesi ve kod üretimi için
 dev_dependencies:
   flutter_test:
-    sdk: flutter
-  flutter_lints: ^4.0.0
+    sdk: flutter # Flutter test çerçevesi, birim ve widget testleri için
+  flutter_lints: ^4.0.0 # Kod kalitesi için lint kuralları
+  mockito: ^5.4.4 # Testler için mock nesneler oluşturma (örneğin, AuthService mock'ları)
+  build_runner: ^2.4.12 # Kod üretimi için, AppLocalizations gibi sınıfları oluşturur
 
-# Flutter yapılandırması
+# Flutter yapılandırmaları
 flutter:
-  uses-material-design: true
+  uses-material-design: true # Material tasarım desteği, standart widget'lar için
 
+  # Statik varlıklar
+  # Uygulamada kullanılan resim dosyaları
   assets:
-    - assets/images/
-    - assets/icons/
-    - assets/animations/
+    - assets/images/ # Logo, arka planlar (splash_screen.dart)
+    - assets/images/kurdish_pattern.png # Kürt halı deseni (tasarım için)
+    - assets/images/kurdish_mountains.jpg # Dağ manzarası (tasarım için)
+    - assets/images/mountain_silhouette.png # Dağ silueti (tasarım için)
 
+  # Font tanımlamaları
+  # Uygulama genelinde kullanılan NotoSans font ailesi
   fonts:
     - family: NotoSans
       fonts:
-        - asset: assets/fonts/NotoSans-Regular.ttf
-        - asset: assets/fonts/NotoSans-Bold.ttf
+        - asset: assets/fonts/NotoSans-Regular.ttf # Normal font
+        - asset: assets/fonts/NotoSans-Bold.ttf # Kalın font
           weight: 700
-        - asset: assets/fonts/NotoSans-Italic.ttf
+        - asset: assets/fonts/NotoSans-Italic.ttf # İtalik font
           style: italic
 
+  # Kod üretimi için
+  # AppLocalizations gibi otomatik üretilen sınıflar için
   generate: true

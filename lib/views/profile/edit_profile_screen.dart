@@ -1,14 +1,16 @@
 // Dosya: lib/views/profile/edit_profile_screen.dart
-// Amaç: Kullanıcı profilini düzenleme ekranı.
-// Bağlantı: profile_screen.dart’tan yönlendirilir.
+// Amaç: Kullanıcı profilini düzenleme ekranını gösterir.
+// Bağlantı: app.dart üzerinden çağrılır, ProfileViewModel ile entegre çalışır.
+// Not: BuildContext parametresi kaldırıldı, hata yönetimi UI katmanına taşındı.
+
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import '../../utils/app_constants.dart';
-import '../../viewmodels/auth_viewmodel.dart';
+import 'package:file_picker/file_picker.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../viewmodels/profile_viewmodel.dart';
+
+import '../../utils/app_constants.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({Key? key}) : super(key: key);
@@ -18,231 +20,166 @@ class EditProfileScreen extends StatefulWidget {
 }
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _bioController = TextEditingController();
-  File? _selectedImage;
-  bool _isSubmitting = false;
+  final TextEditingController _displayNameController = TextEditingController();
+  final TextEditingController _bioController = TextEditingController();
+  File? _selectedPhoto;
 
   @override
   void initState() {
     super.initState();
-    _initializeFormData();
+    final profileViewModel = Provider.of<ProfileViewModel>(context, listen: false);
+    _displayNameController.text = profileViewModel.userDisplayName ?? '';
+    _bioController.text = profileViewModel.bio ?? '';
   }
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _displayNameController.dispose();
     _bioController.dispose();
     super.dispose();
   }
 
-  void _initializeFormData() {
+  // Profil resmini seçer
+  Future<void> _pickPhoto() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.image);
+    if (result != null && result.files.single.path != null) {
+      setState(() {
+        _selectedPhoto = File(result.files.single.path!);
+      });
+    }
+  }
+
+  // Profili günceller
+  Future<void> _updateProfile() async {
     final profileViewModel = Provider.of<ProfileViewModel>(context, listen: false);
-    final user = profileViewModel.user;
-    if (user != null) {
-      _nameController.text = user['displayName'] ?? '';
-      _bioController.text = user['bio'] ?? '';
-    }
-  }
-
-  Future<void> _pickImage() async {
-    final ImagePicker picker = ImagePicker();
-    try {
-      final XFile? pickedFile = await picker.pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 1000,
-        maxHeight: 1000,
-        imageQuality: 70,
-      );
-      if (pickedFile != null) {
-        setState(() {
-          _selectedImage = File(pickedFile.path);
-        });
-      }
-    } catch (e) {
-      print('Resim seçilirken hata oluştu: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Resim seçilirken bir hata oluştu.'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    }
-  }
-
-  Future<void> _saveProfile() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() {
-      _isSubmitting = true;
-    });
-
-    try {
-      final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
-      final profileViewModel = Provider.of<ProfileViewModel>(context, listen: false);
-
-      if (authViewModel.user == null) {
+    if (_selectedPhoto != null) {
+      await profileViewModel.updateProfilePhoto(_selectedPhoto!);
+      if (profileViewModel.errorMessage != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Oturum açmanız gerekiyor.'),
-            duration: Duration(seconds: 2),
-          ),
+          SnackBar(content: Text(profileViewModel.errorMessage!)),
         );
         return;
       }
-
-      if (_selectedImage != null) {
-        await profileViewModel.updateProfilePhoto(authViewModel.user!.uid, _selectedImage!);
-      }
-
-      final success = await profileViewModel.updateProfile(
-        authViewModel.user!.uid,
-        {
-          'displayName': _nameController.text.trim(),
-          'bio': _bioController.text.trim(),
-        },
-      );
-
-      if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profil başarıyla güncellendi'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-        Navigator.pop(context);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profil güncellenirken bir hata oluştu.'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
-    } catch (e) {
-      print('Profil güncellenirken hata oluştu: $e');
+    }
+    await profileViewModel.updateProfile(
+      displayName: _displayNameController.text.trim(),
+      bio: _bioController.text.trim(),
+    );
+    if (profileViewModel.errorMessage != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profil güncellenirken bir hata oluştu.'),
-          duration: Duration(seconds: 2),
-        ),
+        SnackBar(content: Text(profileViewModel.errorMessage!)),
       );
-    } finally {
-      setState(() {
-        _isSubmitting = false;
-      });
+    } else {
+      Navigator.of(context).pop();
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final profileViewModel = Provider.of<ProfileViewModel>(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profili Düzenle'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.check),
-            onPressed: _isSubmitting ? null : _saveProfile,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppConstants.primaryRed,
+              Colors.white,
+              AppConstants.primaryGreen,
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              GestureDetector(
-                onTap: _pickImage,
-                child: Stack(
-                  children: [
-                    CircleAvatar(
-                      radius: 60,
-                      backgroundColor: Colors.grey[300],
-                      backgroundImage: _selectedImage != null
-                          ? FileImage(_selectedImage!) as ImageProvider
-                          : (profileViewModel.user?['photoUrl'] != null
-                          ? CachedNetworkImageProvider(profileViewModel.user!['photoUrl'])
-                          : null),
-                      child: (_selectedImage == null && profileViewModel.user?['photoUrl'] == null)
-                          ? Icon(
-                        Icons.person,
-                        size: 60,
-                        color: Colors.grey[600],
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppConstants.spacingMedium),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Başlık
+                Text(
+                  l10n.editProfile,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: AppConstants.primaryRed,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Profil resmi
+                Center(
+                  child: GestureDetector(
+                    onTap: _pickPhoto,
+                    child: CircleAvatar(
+                      radius: 50,
+                      backgroundImage: _selectedPhoto != null
+                          ? FileImage(_selectedPhoto!)
+                          : profileViewModel.userPhotoUrl != null
+                          ? NetworkImage(profileViewModel.userPhotoUrl!)
+                          : null,
+                      child: _selectedPhoto == null && profileViewModel.userPhotoUrl == null
+                          ? Text(
+                        profileViewModel.userDisplayName?.isNotEmpty == true
+                            ? profileViewModel.userDisplayName![0]
+                            : '',
+                        style: const TextStyle(fontSize: 40),
                       )
                           : null,
                     ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: AppConstants.primaryRed,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.edit,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Kullanıcı adı
+                TextField(
+                  controller: _displayNameController,
+                  decoration: InputDecoration(
+                    labelText: l10n.username,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(
-                  labelText: 'Ad Soyad',
-                  prefixIcon: const Icon(Icons.person),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    filled: true,
+                    fillColor: Colors.white,
                   ),
                 ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Lütfen ad soyad giriniz';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _bioController,
-                decoration: InputDecoration(
-                  labelText: 'Biyografi',
-                  prefixIcon: const Icon(Icons.info),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                const SizedBox(height: 16),
+                // Bio
+                TextField(
+                  controller: _bioController,
+                  decoration: InputDecoration(
+                    labelText: l10n.bio,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
                   ),
-                  hintText: 'Kendiniz hakkında kısa bir bilgi',
+                  maxLines: 3,
                 ),
-                maxLines: 3,
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _isSubmitting ? null : _saveProfile,
-                child: _isSubmitting
-                    ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    strokeWidth: 2,
+                const SizedBox(height: 16),
+                // Kaydet butonu
+                profileViewModel.isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : ElevatedButton(
+                  onPressed: _updateProfile,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppConstants.primaryRed,
+                    minimumSize: const Size(double.infinity, 50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
-                )
-                    : const Text('Profili Güncelle'),
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 48),
+                  child: Text(
+                    l10n.save,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

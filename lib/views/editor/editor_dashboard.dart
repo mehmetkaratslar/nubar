@@ -1,122 +1,95 @@
 // Dosya: lib/views/editor/editor_dashboard.dart
-// Amaç: Editörlerin içerik yönetim paneli.
-// Bağlantı: home_screen.dart’tan yönlendirilir, content_editor_screen.dart’a gider.
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../viewmodels/editor_viewmodel.dart';
-import '../../models/content_model.dart';
-import 'content_editor_screen.dart';
+// Amaç: Editör kontrol panelini gösterir, içerik oluşturma ve düzenleme işlemlerini başlatır.
+// Bağlantı: app.dart üzerinden çağrılır, EditorViewModel ile entegre çalışır.
+// Not: summary ve text parametreleri eklendi.
 
-class EditorDashboard extends StatefulWidget {
+import 'package:flutter/material.dart';
+import '../../models/content_model.dart';
+import '../../models/content_status.dart';
+import '../../utils/app_constants.dart';
+
+class EditorDashboard extends StatelessWidget {
   const EditorDashboard({Key? key}) : super(key: key);
 
   @override
-  _EditorDashboardState createState() => _EditorDashboardState();
-}
-
-class _EditorDashboardState extends State<EditorDashboard> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final editorViewModel = Provider.of<EditorViewModel>(context, listen: false);
-      editorViewModel.fetchDraftContents();
-      editorViewModel.fetchReports();
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final editorViewModel = Provider.of<EditorViewModel>(context);
-
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Editör Paneli'),
-      ),
-      body: editorViewModel.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Taslaklar',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: editorViewModel.draftContents.length,
-              itemBuilder: (context, index) {
-                final draft = editorViewModel.draftContents[index];
-                return ListTile(
-                  title: Text(draft.title),
-                  subtitle: Text(draft.category),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.edit),
-                        onPressed: () {
-                          Navigator.pushNamed(
-                            context,
-                            '/content_editor',
-                            arguments: draft.id,
-                          );
-                        },
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.publish),
-                        onPressed: () async {
-                          await editorViewModel.publishDraft(draft.id);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Taslak yayınlandı')),
-                          );
-                        },
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete),
-                        onPressed: () async {
-                          await editorViewModel.deleteDraft(draft.id);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Taslak silindi')),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'Şikayetler',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: editorViewModel.reports.length,
-              itemBuilder: (context, index) {
-                final report = editorViewModel.reports[index];
-                return ListTile(
-                  title: Text(report.contentTitle),
-                  subtitle: Text('Sebep: ${report.reason}'),
-                  trailing: Text(report.status),
-                );
-              },
-            ),
-          ],
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppConstants.primaryRed,
+              Colors.white,
+              AppConstants.primaryGreen,
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.pushNamed(context, '/content_editor');
-        },
-        child: const Icon(Icons.add),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(AppConstants.spacingMedium),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Başlık
+                const Text(
+                  'Editör Paneli',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: AppConstants.primaryRed,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Yeni İçerik Oluştur Butonu
+                ElevatedButton(
+                  onPressed: () {
+                    // Örnek içerik oluştur
+                    final content = ContentModel(
+                      id: '',
+                      title: 'Yeni İçerik',
+                      description: '',
+                      contentJson: null,
+                      category: 'history',
+                      mediaUrls: [],
+                      thumbnailUrl: null,
+                      userId: 'user_id',
+                      userDisplayName: 'User Name',
+                      authorName: 'User Name',
+                      userPhotoUrl: null,
+                      createdAt: DateTime.now(),
+                      updatedAt: DateTime.now(),
+                      likeCount: 0,
+                      commentCount: 0,
+                      viewCount: 0,
+                      isFeatured: false,
+                      status: ContentStatus.draft,
+                      summary: 'Yeni içerik özeti',
+                      text: 'Yeni içerik metni',
+                    );
+                    // İçerik oluşturma ekranına yönlendir
+                    Navigator.of(context).pushNamed('/content_editor', arguments: content);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppConstants.primaryRed,
+                    minimumSize: const Size(double.infinity, 50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text(
+                    'Yeni İçerik Oluştur',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

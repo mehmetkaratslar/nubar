@@ -1,49 +1,55 @@
 // Dosya: lib/models/content_model.dart
-// Amaç: İçerik verilerini temsil eder (başlık, açıklama, medya, kategori).
-// Bağlantı: content_viewmodel.dart, home_screen.dart, content_detail_screen.dart’ta kullanılır.
-import 'package:cloud_firestore/cloud_firestore.dart';
+// Amaç: İçerik modelini tanımlar.
+// Bağlantı: content_viewmodel.dart, content_detail_screen.dart gibi sınıflarla entegre çalışır.
+// Not: summary ve text alanları eklendi.
 
-class ContentModel {
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:equatable/equatable.dart';
+import 'content_status.dart';
+
+class ContentModel extends Equatable {
   final String id;
   final String title;
   final String description;
+  final String? contentJson;
   final String category;
-  final String language;
-  final String? imageUrl;
   final List<String>? mediaUrls;
-  final String? videoUrl;
+  final String? thumbnailUrl;
   final String userId;
+  final String userDisplayName;
   final String authorName;
   final String? userPhotoUrl;
-  final String? userDisplayName;
-  final bool isFeatured;
-  final int viewCount;
+  final DateTime createdAt;
+  final DateTime updatedAt;
   final int likeCount;
   final int commentCount;
-  final DateTime? createdAt;
-  final String? thumbnailUrl;
-  final String? content;
+  final int viewCount;
+  final bool isFeatured;
+  final ContentStatus status;
+  final String summary; // Özet alanı eklendi
+  final String text; // Metin alanı eklendi
 
-  ContentModel({
+  const ContentModel({
     required this.id,
     required this.title,
     required this.description,
+    this.contentJson,
     required this.category,
-    required this.language,
-    this.imageUrl,
     this.mediaUrls,
-    this.videoUrl,
+    this.thumbnailUrl,
     required this.userId,
+    required this.userDisplayName,
     required this.authorName,
     this.userPhotoUrl,
-    this.userDisplayName,
-    required this.isFeatured,
-    required this.viewCount,
+    required this.createdAt,
+    required this.updatedAt,
     required this.likeCount,
     required this.commentCount,
-    this.createdAt,
-    this.thumbnailUrl,
-    this.content,
+    required this.viewCount,
+    required this.isFeatured,
+    required this.status,
+    required this.summary,
+    required this.text,
   });
 
   factory ContentModel.fromMap(Map<String, dynamic> map, String id) {
@@ -51,93 +57,121 @@ class ContentModel {
       id: id,
       title: map['title'] ?? '',
       description: map['description'] ?? '',
-      category: map['category'] ?? 'Genel',
-      language: map['language'] ?? 'tr',
-      imageUrl: map['imageUrl'],
+      contentJson: map['contentJson'],
+      category: map['category'] ?? '',
       mediaUrls: map['mediaUrls'] != null ? List<String>.from(map['mediaUrls']) : null,
-      videoUrl: map['videoUrl'],
+      thumbnailUrl: map['thumbnailUrl'],
       userId: map['userId'] ?? '',
-      authorName: map['authorName'] ?? 'Bilinmeyen',
+      userDisplayName: map['userDisplayName'] ?? '',
+      authorName: map['authorName'] ?? '',
       userPhotoUrl: map['userPhotoUrl'],
-      userDisplayName: map['userDisplayName'],
-      isFeatured: map['isFeatured'] ?? false,
-      viewCount: map['viewCount'] ?? 0,
+      createdAt: (map['createdAt'] as Timestamp).toDate(),
+      updatedAt: (map['updatedAt'] as Timestamp).toDate(),
       likeCount: map['likeCount'] ?? 0,
       commentCount: map['commentCount'] ?? 0,
-      createdAt: map['createdAt'] != null ? (map['createdAt'] as Timestamp).toDate() : null,
-      thumbnailUrl: map['thumbnailUrl'],
-      content: map['content'],
+      viewCount: map['viewCount'] ?? 0,
+      isFeatured: map['isFeatured'] ?? false,
+      status: ContentStatus.values.firstWhere(
+            (e) => e.toString() == map['status'],
+        orElse: () => ContentStatus.draft,
+      ),
+      summary: map['summary'] ?? '', // Özet alanı eklendi
+      text: map['text'] ?? '', // Metin alanı eklendi
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
+      'id': id,
       'title': title,
       'description': description,
+      'contentJson': contentJson,
       'category': category,
-      'language': language,
-      'imageUrl': imageUrl,
       'mediaUrls': mediaUrls,
-      'videoUrl': videoUrl,
+      'thumbnailUrl': thumbnailUrl,
       'userId': userId,
+      'userDisplayName': userDisplayName,
       'authorName': authorName,
       'userPhotoUrl': userPhotoUrl,
-      'userDisplayName': userDisplayName,
-      'isFeatured': isFeatured,
-      'viewCount': viewCount,
+      'createdAt': createdAt,
+      'updatedAt': updatedAt,
       'likeCount': likeCount,
       'commentCount': commentCount,
-      'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : null,
-      'thumbnailUrl': thumbnailUrl,
-      'content': content,
+      'viewCount': viewCount,
+      'isFeatured': isFeatured,
+      'status': status.toString(),
+      'summary': summary, // Özet alanı eklendi
+      'text': text, // Metin alanı eklendi
     };
   }
 
   ContentModel copyWith({
+    String? id,
     String? title,
     String? description,
+    String? contentJson,
     String? category,
-    String? language,
-    String? imageUrl,
     List<String>? mediaUrls,
-    String? videoUrl,
+    String? thumbnailUrl,
     String? userId,
+    String? userDisplayName,
     String? authorName,
     String? userPhotoUrl,
-    String? userDisplayName,
-    bool? isFeatured,
-    int? viewCount,
+    DateTime? createdAt,
+    DateTime? updatedAt,
     int? likeCount,
     int? commentCount,
-    DateTime? createdAt,
-    String? thumbnailUrl,
-    String? content,
+    int? viewCount,
+    bool? isFeatured,
+    ContentStatus? status,
+    String? summary,
+    String? text,
   }) {
     return ContentModel(
-      id: id,
+      id: id ?? this.id,
       title: title ?? this.title,
       description: description ?? this.description,
+      contentJson: contentJson ?? this.contentJson,
       category: category ?? this.category,
-      language: language ?? this.language,
-      imageUrl: imageUrl ?? this.imageUrl,
       mediaUrls: mediaUrls ?? this.mediaUrls,
-      videoUrl: videoUrl ?? this.videoUrl,
+      thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
       userId: userId ?? this.userId,
+      userDisplayName: userDisplayName ?? this.userDisplayName,
       authorName: authorName ?? this.authorName,
       userPhotoUrl: userPhotoUrl ?? this.userPhotoUrl,
-      userDisplayName: userDisplayName ?? this.userDisplayName,
-      isFeatured: isFeatured ?? this.isFeatured,
-      viewCount: viewCount ?? this.viewCount,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
       likeCount: likeCount ?? this.likeCount,
       commentCount: commentCount ?? this.commentCount,
-      createdAt: createdAt ?? this.createdAt,
-      thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
-      content: content ?? this.content,
+      viewCount: viewCount ?? this.viewCount,
+      isFeatured: isFeatured ?? this.isFeatured,
+      status: status ?? this.status,
+      summary: summary ?? this.summary,
+      text: text ?? this.text,
     );
   }
 
   @override
-  String toString() {
-    return 'ContentModel(id: $id, title: $title, category: $category)';
-  }
+  List<Object?> get props => [
+    id,
+    title,
+    description,
+    contentJson,
+    category,
+    mediaUrls,
+    thumbnailUrl,
+    userId,
+    userDisplayName,
+    authorName,
+    userPhotoUrl,
+    createdAt,
+    updatedAt,
+    likeCount,
+    commentCount,
+    viewCount,
+    isFeatured,
+    status,
+    summary,
+    text,
+  ];
 }

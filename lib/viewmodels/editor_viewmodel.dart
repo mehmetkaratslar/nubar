@@ -1,257 +1,173 @@
 // Dosya: lib/viewmodels/editor_viewmodel.dart
-// Amaç: Editör işlemlerini (taslak oluşturma, düzenleme, şikayet yönetimi) yönetir.
-// Bağlantı: editor_dashboard.dart, content_editor_screen.dart ile çalışır.
+// Amaç: İçerik oluşturma ve düzenleme işlemlerini yönetir.
+// Bağlantı: content_editor_screen.dart ile entegre çalışır.
+// Not: summary ve text parametreleri eklendi, contentJson türü düzeltildi.
+
+import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter_quill/flutter_quill.dart' as quill;
+import 'package:flutter/foundation.dart';
 import '../models/content_model.dart';
-import '../models/report_model.dart';
+import '../models/content_status.dart';
+import '../services/firestore_service.dart';
+import '../services/storage_service.dart';
 
 class EditorViewModel with ChangeNotifier {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseStorage _storage = FirebaseStorage.instance;
-  List<ContentModel> _draftContents = [];
-  List<ReportModel> _reports = [];
+  final FirestoreService _firestoreService;
+  final StorageService _storageService;
+  quill.QuillController? _controller;
+  ContentModel? _content;
+  String? _title;
+  String? _summary;
+  String? _category;
+  List<File> _mediaFiles = [];
   bool _isLoading = false;
   String? _errorMessage;
-  int likeCount = 0;
-  int commentCount = 0;
 
-  EditorViewModel();
+  EditorViewModel({
+    required FirestoreService firestoreService,
+    required StorageService storageService,
+  })  : _firestoreService = firestoreService,
+        _storageService = storageService;
 
-  List<ContentModel> get draftContents => _draftContents;
-  List<ReportModel> get reports => _reports;
+  quill.QuillController? get controller => _controller;
+  ContentModel? get content => _content;
+  String? get title => _title;
+  String? get summary => _summary;
+  String? get category => _category;
+  List<File> get mediaFiles => _mediaFiles;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
-  // Taslak içerik listesini getir
-  Future<void> fetchDraftContents() async {
-    try {
-      _setLoading(true);
-      QuerySnapshot snapshot = await _firestore
-          .collection('drafts')
-          .orderBy('createdAt', descending: true)
-          .get();
-      _draftContents = snapshot.docs.map((doc) {
-        return ContentModel.fromMap(doc.data() as Map<String, dynamic>, doc.id);
-      }).toList();
-      _errorMessage = null;
-      notifyListeners();
-    } catch (e) {
-      _errorMessage = 'Taslaklar yüklenirken hata oluştu: $e';
-      print(_errorMessage);
-    } finally {
-      _setLoading(false);
-    }
+  // Editör kontrolcüsünü başlatır
+  void initializeEditor() {
+    _controller = quill.QuillController.basic();
+    notifyListeners();
   }
 
-  // Şikayetleri getir
-  Future<void> fetchReports() async {
-    try {
-      _setLoading(true);
-      QuerySnapshot snapshot = await _firestore
-          .collection('reports')
-          .orderBy('createdAt', descending: true)
-          .get();
-      _reports = snapshot.docs.map((doc) {
-        return ReportModel.fromMap(doc.data() as Map<String, dynamic>, doc.id);
-      }).toList();
-      _errorMessage = null;
-      notifyListeners();
-    } catch (e) {
-      _errorMessage = 'Şikayetler yüklenirken hata oluştu: $e';
-      print(_errorMessage);
-    } finally {
-      _setLoading(false);
-    }
+  // Başlığı günceller
+  void setTitle(String title) {
+    _title = title;
+    notifyListeners();
   }
 
-  // Taslak oluştur
-  Future<bool> createDraft({
-    required String title,
-    required String description,
-    required String category,
-    required String language,
-    File? imageFile,
-    required String userId,
-    required String authorName,
-  }) async {
+  // Özeti günceller
+  void setSummary(String summary) {
+    _summary = summary;
+    notifyListeners();
+  }
+
+  // Kategoriyi günceller
+  void setCategory(String category) {
+    _category = category;
+    notifyListeners();
+  }
+
+  // Medya dosyalarını ekler
+  Future<void> addMediaFiles(List<File> files) async {
+    _mediaFiles.addAll(files);
+    notifyListeners();
+  }
+
+  // İçeriği kaydeder
+  Future<void> saveContent(String userId, String userDisplayName, String? userPhotoUrl) async {
     try {
       _setLoading(true);
-      String? imageUrl;
-      if (imageFile != null) {
-        String fileName = 'draft_images/${DateTime.now().millisecondsSinceEpoch}_${imageFile.path.split('/').last}';
-        Reference ref = _storage.ref().child(fileName);
-        await ref.putFile(imageFile);
-        imageUrl = await ref.getDownloadURL();
+      _errorMessage = null;
+
+      // Medya dosyalarını yükle
+      List<String> mediaUrls = [];
+      for (File file in _mediaFiles) {
+        String fileName = DateTime.now().millisecondsSinceEpoch.toString() + file.path.split('/').last;
+        String url = await _storageService.uploadFile('content_media/$fileName', file);
+        mediaUrls.add(url);
       }
 
-      final newDraft = {
-        'title': title,
-        'description': description,
-        'category': category,
-        'language': language,
-        'imageUrl': imageUrl,
-        'userId': userId,
-        'authorName': authorName,
-        'status': 'draft',
-        'createdAt': FieldValue.serverTimestamp(),
-      };
-
-      DocumentReference draftRef = await _firestore.collection('drafts').add(newDraft);
-      final draftModel = ContentModel(
-        id: draftRef.id,
-        title: title,
-        description: description,
-        category: category,
-        language: language,
-        imageUrl: imageUrl,
+      // İçeriği oluştur
+      final content = ContentModel(
+        id: '',
+        title: _title ?? 'Başlıksız',
+        description: _summary ?? '',
+        contentJson: jsonEncode(_controller?.document.toDelta().toJson()), // Map'ten String'e çevir
+        category: _category ?? 'history',
+        mediaUrls: mediaUrls,
+        thumbnailUrl: mediaUrls.isNotEmpty ? mediaUrls.first : null,
         userId: userId,
-        authorName: authorName,
-        isFeatured: false,
-        viewCount: 0,
+        userDisplayName: userDisplayName,
+        authorName: userDisplayName,
+        userPhotoUrl: userPhotoUrl,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
         likeCount: 0,
         commentCount: 0,
+        viewCount: 0,
+        isFeatured: false,
+        status: ContentStatus.draft,
+        summary: _summary ?? 'Özet yok',
+        text: _controller?.document.toPlainText() ?? '',
+      );
+
+      await _firestoreService.createContent(content);
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  // İçeriği yayınlar
+  Future<void> publishContent(String userId, String userDisplayName, String? userPhotoUrl) async {
+    try {
+      _setLoading(true);
+      _errorMessage = null;
+
+      // Medya dosyalarını yükle
+      List<String> mediaUrls = [];
+      for (File file in _mediaFiles) {
+        String fileName = DateTime.now().millisecondsSinceEpoch.toString() + file.path.split('/').last;
+        String url = await _storageService.uploadFile('content_media/$fileName', file);
+        mediaUrls.add(url);
+      }
+
+      // İçeriği oluştur
+      final content = ContentModel(
+        id: '',
+        title: _title ?? 'Başlıksız',
+        description: _summary ?? '',
+        contentJson: jsonEncode(_controller?.document.toDelta().toJson()), // Map'ten String'e çevir
+        category: _category ?? 'history',
+        mediaUrls: mediaUrls,
+        thumbnailUrl: mediaUrls.isNotEmpty ? mediaUrls.first : null,
+        userId: userId,
+        userDisplayName: userDisplayName,
+        authorName: userDisplayName,
+        userPhotoUrl: userPhotoUrl,
         createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        likeCount: 0,
+        commentCount: 0,
+        viewCount: 0,
+        isFeatured: false,
+        status: ContentStatus.published,
+        summary: _summary ?? 'Özet yok',
+        text: _controller?.document.toPlainText() ?? '',
       );
-      _draftContents.insert(0, draftModel);
-      _errorMessage = null;
+
+      await _firestoreService.createContent(content);
       notifyListeners();
-      return true;
     } catch (e) {
-      _errorMessage = 'Taslak oluşturulurken hata oluştu: $e';
-      print(_errorMessage);
-      return false;
+      _errorMessage = e.toString();
+      notifyListeners();
     } finally {
       _setLoading(false);
     }
   }
 
-  // Taslak düzenle
-  Future<bool> updateDraft({
-    required String draftId,
-    required String title,
-    required String description,
-    required String category,
-    required String language,
-    File? imageFile,
-  }) async {
-    try {
-      _setLoading(true);
-      final existingDraftIndex = _draftContents.indexWhere((d) => d.id == draftId);
-      if (existingDraftIndex == -1) {
-        _errorMessage = 'Düzenlenecek taslak bulunamadı.';
-        return false;
-      }
-
-      final existingDraft = _draftContents[existingDraftIndex];
-      final updates = <String, dynamic>{
-        'title': title,
-        'description': description,
-        'category': category,
-        'language': language,
-      };
-
-      String? imageUrl = existingDraft.imageUrl;
-      if (imageFile != null) {
-        String fileName = 'draft_images/${DateTime.now().millisecondsSinceEpoch}_${imageFile.path.split('/').last}';
-        Reference ref = _storage.ref().child(fileName);
-        await ref.putFile(imageFile);
-        imageUrl = await ref.getDownloadURL();
-        updates['imageUrl'] = imageUrl;
-      }
-
-      await _firestore.collection('drafts').doc(draftId).update(updates);
-      final updatedDraft = existingDraft.copyWith(
-        title: title,
-        description: description,
-        category: category,
-        language: language,
-        imageUrl: imageUrl,
-      );
-      _draftContents[existingDraftIndex] = updatedDraft;
-      _errorMessage = null;
-      notifyListeners();
-      return true;
-    } catch (e) {
-      _errorMessage = 'Taslak güncellenirken hata oluştu: $e';
-      print(_errorMessage);
-      return false;
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  // Taslak sil
-  Future<bool> deleteDraft(String draftId) async {
-    try {
-      _setLoading(true);
-      await _firestore.collection('drafts').doc(draftId).delete();
-      _draftContents.removeWhere((draft) => draft.id == draftId);
-      _errorMessage = null;
-      notifyListeners();
-      return true;
-    } catch (e) {
-      _errorMessage = 'Taslak silinirken hata oluştu: $e';
-      print(_errorMessage);
-      return false;
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  // Taslağı yayınla (içeriği ana koleksiyona taşır)
-  Future<bool> publishDraft(String draftId) async {
-    try {
-      _setLoading(true);
-      final draftIndex = _draftContents.indexWhere((d) => d.id == draftId);
-      if (draftIndex == -1) {
-        _errorMessage = 'Yayınlanacak taslak bulunamadı.';
-        return false;
-      }
-
-      final draft = _draftContents[draftIndex];
-      final contentData = draft.toMap();
-      contentData['createdAt'] = FieldValue.serverTimestamp();
-      contentData.remove('status');
-
-      DocumentReference contentRef = await _firestore.collection('contents').add(contentData);
-      await _firestore.collection('drafts').doc(draftId).delete();
-      _draftContents.removeAt(draftIndex);
-      _errorMessage = null;
-      notifyListeners();
-      return true;
-    } catch (e) {
-      _errorMessage = 'Taslak yayınlanırken hata oluştu: $e';
-      print(_errorMessage);
-      return false;
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  // Beğeni sayısını güncelle
-  void setLikeCount(num value) {
-    likeCount = value.toInt();
-    notifyListeners();
-  }
-
-  // Yorum sayısını güncelle
-  void setCommentCount(num value) {
-    commentCount = value.toInt();
-    notifyListeners();
-  }
-
-  // Yükleme durumunu ayarla
-  void _setLoading(bool isLoading) {
-    _isLoading = isLoading;
-    notifyListeners();
-  }
-
-  // Hata mesajını temizle
-  void clearError() {
-    _errorMessage = null;
+  // Yükleme durumunu ayarlar
+  void _setLoading(bool value) {
+    _isLoading = value;
     notifyListeners();
   }
 }
